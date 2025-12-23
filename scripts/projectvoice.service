@@ -1,0 +1,36 @@
+[Unit]
+Description=ProjectVoice Backend API
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/projectvoice/current
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=projectvoice-backend
+
+# Environment variables
+Environment=NODE_ENV=production
+Environment=PORT=5001
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/projectvoice/current/logs
+ReadWritePaths=/opt/projectvoice/current/uploads
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,36 @@
+[Unit]
+Description=ProjectVoice Backend API (Staging)
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/projectvoice-staging/current
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=projectvoice-staging
+
+# Environment variables
+Environment=NODE_ENV=staging
+Environment=PORT=5002
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/projectvoice-staging/current/logs
+ReadWritePaths=/opt/projectvoice-staging/current/uploads
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+

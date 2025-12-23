@@ -7,6 +7,28 @@ const { Op, Sequelize } = require('sequelize');
 const router = express.Router();
 
 // Тестовый маршрут для проверки
+/**
+ * @swagger
+ * /api/admin/test:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Тестовый маршрут
+ *     description: Проверка работоспособности админских маршрутов
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Успешный ответ
+ *         schema:
+ *           type: object
+ *           properties:
+ *             message:
+ *               type: string
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав (требуется роль admin)
+ */
 router.get('/test', authenticateToken, isAdmin, async (req, res) => {
     try {
         res.json({ message: 'Админский маршрут работает' });
@@ -17,6 +39,34 @@ router.get('/test', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Тестовый маршрут для проверки подключения к базе данных
+/**
+ * @swagger
+ * /api/admin/db-test:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Тест подключения к базе данных
+ *     description: Проверяет подключение к базе данных и доступность моделей
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Подключение работает
+ *         schema:
+ *           type: object
+ *           properties:
+ *             message:
+ *               type: string
+ *             userCount:
+ *               type: integer
+ *             models:
+ *               type: object
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ *       500:
+ *         description: Ошибка базы данных
+ */
 router.get('/db-test', authenticateToken, isAdmin, async (req, res) => {
     try {
         console.log('Проверяем подключение к базе данных...');
@@ -49,6 +99,43 @@ router.get('/db-test', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Получение статистики системы
+/**
+ * @swagger
+ * /api/admin/stats:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Получить статистику системы
+ *     description: Возвращает общую статистику по пользователям, серверам, каналам и сообщениям
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Статистика системы
+ *         schema:
+ *           type: object
+ *           properties:
+ *             users:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 blocked:
+ *                   type: integer
+ *                 byRole:
+ *                   type: object
+ *             servers:
+ *               type: object
+ *             channels:
+ *               type: object
+ *             messages:
+ *               type: object
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ */
 router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
     try {
         console.log('Начинаем получение статистики...');
@@ -158,6 +245,70 @@ router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Получение списка пользователей с пагинацией
+/**
+ * @swagger
+ * /api/admin/users:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Получить список пользователей
+ *     description: Возвращает список пользователей с пагинацией, поиском и фильтрацией
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Номер страницы
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Количество записей на странице
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Поиск по username или email
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [user, moderator, admin]
+ *         description: Фильтр по роли
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, blocked]
+ *         description: Фильтр по статусу
+ *     responses:
+ *       200:
+ *         description: Список пользователей
+ *         schema:
+ *           type: object
+ *           properties:
+ *             users:
+ *               type: array
+ *               items:
+ *                 $ref: '#/definitions/User'
+ *             total:
+ *               type: integer
+ *             page:
+ *               type: integer
+ *             limit:
+ *               type: integer
+ *             totalPages:
+ *               type: integer
+ *       400:
+ *         description: Неверные параметры
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ */
 router.get('/users', authenticateToken, isModerator, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -226,6 +377,34 @@ router.get('/users', authenticateToken, isModerator, async (req, res) => {
 });
 
 // Получение информации о пользователе
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Получить информацию о пользователе
+ *     description: Возвращает детальную информацию о пользователе по ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID пользователя
+ *     responses:
+ *       200:
+ *         description: Информация о пользователе
+ *         schema:
+ *           $ref: '#/definitions/User'
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ *       404:
+ *         description: Пользователь не найден
+ */
 router.get('/users/:id', authenticateToken, isModerator, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id, {
@@ -254,6 +433,45 @@ router.get('/users/:id', authenticateToken, isModerator, async (req, res) => {
 });
 
 // Обновление пользователя (роль, статус)
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   put:
+ *     tags: [Admin]
+ *     summary: Обновить пользователя
+ *     description: Обновляет роль и статус пользователя (только для администраторов)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID пользователя
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             role:
+ *               type: string
+ *               enum: [user, moderator, admin]
+ *             isActive:
+ *               type: boolean
+ *     responses:
+ *       200:
+ *         description: Пользователь обновлен
+ *       400:
+ *         description: Неверные параметры
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ *       404:
+ *         description: Пользователь не найден
+ */
 router.put('/users/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const { role, isActive } = req.body;
@@ -307,6 +525,34 @@ router.put('/users/:id', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Удаление пользователя
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Удалить пользователя
+ *     description: Удаляет пользователя из системы (только для администраторов)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID пользователя
+ *     responses:
+ *       200:
+ *         description: Пользователь удален
+ *       400:
+ *         description: Неверные параметры
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ *       404:
+ *         description: Пользователь не найден
+ */
 router.delete('/users/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const userId = parseInt(req.params.id);
@@ -342,6 +588,45 @@ router.delete('/users/:id', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Получение списка серверов
+/**
+ * @swagger
+ * /api/admin/servers:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Получить список серверов
+ *     description: Возвращает список серверов с пагинацией и фильтрацией
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, blocked]
+ *     responses:
+ *       200:
+ *         description: Список серверов
+ *       400:
+ *         description: Неверные параметры
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ */
 router.get('/servers', authenticateToken, isModerator, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -457,6 +742,44 @@ router.get('/servers/:id', authenticateToken, isModerator, async (req, res) => {
 });
 
 // Блокировка сервера
+/**
+ * @swagger
+ * /api/admin/servers/{id}/block:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Заблокировать сервер
+ *     description: Блокирует сервер с указанием причины
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - reason
+ *           properties:
+ *             reason:
+ *               type: string
+ *               minLength: 3
+ *     responses:
+ *       200:
+ *         description: Сервер заблокирован
+ *       400:
+ *         description: Неверные параметры
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ *       404:
+ *         description: Сервер не найден
+ */
 router.post('/servers/:id/block', authenticateToken, isAdmin, async (req, res) => {
     try {
         const { reason } = req.body;
@@ -516,6 +839,33 @@ router.post('/servers/:id/block', authenticateToken, isAdmin, async (req, res) =
 });
 
 // Разблокировка сервера
+/**
+ * @swagger
+ * /api/admin/servers/{id}/unblock:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Разблокировать сервер
+ *     description: Снимает блокировку с сервера
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Сервер разблокирован
+ *       400:
+ *         description: Неверные параметры
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ *       404:
+ *         description: Сервер не найден
+ */
 router.post('/servers/:id/unblock', authenticateToken, isAdmin, async (req, res) => {
     try {
         const serverId = parseInt(req.params.id);
@@ -594,6 +944,23 @@ router.delete('/servers/:id', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // Получение логов системы
+/**
+ * @swagger
+ * /api/admin/logs:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Получить логи системы
+ *     description: Возвращает логи системы (заглушка)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Логи системы
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав
+ */
 router.get('/logs', authenticateToken, isAdmin, async (req, res) => {
     try {
         // Здесь можно добавить логику получения логов из файла или базы данных

@@ -81,7 +81,7 @@ router.delete('/', authenticateToken, async (req, res) => {
     try {
         const user = await User.findByPk(req.user.userId);
         if (!user) {
-            return res.status(404).json({ message: 'Гойзователь не найден' });
+            return res.status(404).json({ message: 'Пользователь не найден' });
         }
         await user.destroy();
         res.json({ message: 'User deleted successfully' });

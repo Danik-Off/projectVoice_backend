@@ -1,26 +1,22 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const path = require('path');
-const { Sequelize } = require('sequelize');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const webrtc = require('./modules/webrtc/webrtc'); // Подключение логики WebRTC
 
-//Импорт маршрутов
+// Импорт маршрутов
 const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
 const serverRoutes = require('./routes/server');
-const channeRoutes = require('./routes/channel');
+const channelRoutes = require('./routes/channel');
 const serverMembersRoutes = require('./routes/serverMembers');
 const serverInviteRoutes = require('./routes/invite');
 const adminRoutes = require('./routes/admin');
 const messageRoutes = require('./routes/message');
 
-//
-const { exec } = require('child_process');
-
-//документация
+// Документация Swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./utils/swagger/swagger-output.json');
 
@@ -43,12 +39,15 @@ const io = new Server(server, {
 
 app.use(express.json());
 
+// Настройка CORS
 app.use(
     cors({
-        origin: ['http://localhost:3000', 'http://localhost:3001', '*'], // Разрешаем доступ с фронтенда
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Добавляем OPTIONS и PATCH
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'], // Явно указываем разрешенные заголовки
-        credentials: true, // Укажите, если вам нужно передавать куки
+        origin: process.env.CORS_ORIGIN 
+            ? process.env.CORS_ORIGIN.split(',') 
+            : ['http://localhost:3000', 'http://localhost:3001'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+        credentials: true,
         preflightContinue: false,
         optionsSuccessStatus: 204
     })
@@ -59,16 +58,17 @@ app.use((req, res, next) => {
     next();
 });
 
-// Подключение маршрутов Api
+// Подключение маршрутов API
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/servers', serverRoutes);
-app.use('/api/servers', channeRoutes);
-app.use('/api/serverMembers', serverMembersRoutes); // Исправляем путь для serverMembers
-app.use('/api/invite', serverInviteRoutes); //создание invite ссылки
-app.use('/api/admin', adminRoutes); //админ панель
-app.use('/api/messages', messageRoutes);
-//документация
+app.use('/api/servers', channelRoutes); // Каналы серверов
+app.use('/api/serverMembers', serverMembersRoutes); // Участники серверов
+app.use('/api/invite', serverInviteRoutes); // Приглашения на серверы
+app.use('/api/admin', adminRoutes); // Административная панель
+app.use('/api/messages', messageRoutes); // Сообщения в каналах
+
+// Swagger документация
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Настройка раздачи статических файлов фронтенда
@@ -83,8 +83,10 @@ app.get('*', (req, res) => {
 webrtc(io);
 
 // Запуск сервера
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
-    console.log(`Сервер запущен на порту ${PORT}`);
+    console.log(`🚀 Сервер запущен на порту ${PORT}`);
+    console.log(`📚 Swagger документация: http://localhost:${PORT}/api-docs`);
+    console.log(`🌐 API базовый URL: http://localhost:${PORT}/api`);
 });
 

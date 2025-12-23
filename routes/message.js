@@ -6,6 +6,59 @@ const { authenticateToken } = require('../middleware/auth');
 const { checkRole } = require('../middleware/checkRole');
 
 // Получение сообщений канала с пагинацией
+/**
+ * @swagger
+ * /api/messages:
+ *   get:
+ *     tags: [Messages]
+ *     summary: Получить сообщения канала
+ *     description: Возвращает список сообщений указанного канала с поддержкой пагинации
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: channelId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID канала
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Номер страницы
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Количество сообщений на странице
+ *     responses:
+ *       200:
+ *         description: Список сообщений
+ *         schema:
+ *           type: object
+ *           properties:
+ *             messages:
+ *               type: array
+ *               items:
+ *                 $ref: '#/definitions/Message'
+ *             total:
+ *               type: integer
+ *             page:
+ *               type: integer
+ *             limit:
+ *               type: integer
+ *             totalPages:
+ *               type: integer
+ *       400:
+ *         description: Неверные параметры запроса
+ *       401:
+ *         description: Не авторизован
+ *       500:
+ *         description: Ошибка сервера
+ */
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { channelId, page = 1, limit = 50 } = req.query;
@@ -62,6 +115,45 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Создание нового сообщения
+/**
+ * @swagger
+ * /api/messages:
+ *   post:
+ *     tags: [Messages]
+ *     summary: Создать новое сообщение
+ *     description: Создает новое сообщение в указанном канале
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - content
+ *             - channelId
+ *           properties:
+ *             content:
+ *               type: string
+ *               description: Текст сообщения
+ *             channelId:
+ *               type: integer
+ *               description: ID канала
+ *     responses:
+ *       201:
+ *         description: Сообщение успешно создано
+ *         schema:
+ *           $ref: '#/definitions/Message'
+ *       400:
+ *         description: Неверные параметры запроса
+ *       401:
+ *         description: Не авторизован
+ *       404:
+ *         description: Канал не найден
+ *       500:
+ *         description: Ошибка сервера
+ */
 router.post('/', authenticateToken, async (req, res) => {
     try {
         const { content, channelId } = req.body;
@@ -123,6 +215,49 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Обновление сообщения
+/**
+ * @swagger
+ * /api/messages/{id}:
+ *   put:
+ *     tags: [Messages]
+ *     summary: Обновить сообщение
+ *     description: Обновляет текст существующего сообщения. Только автор сообщения или модератор могут редактировать
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID сообщения
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - content
+ *           properties:
+ *             content:
+ *               type: string
+ *               description: Новый текст сообщения
+ *     responses:
+ *       200:
+ *         description: Сообщение успешно обновлено
+ *         schema:
+ *           $ref: '#/definitions/Message'
+ *       400:
+ *         description: Неверные параметры запроса
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав для редактирования
+ *       404:
+ *         description: Сообщение не найдено
+ *       500:
+ *         description: Ошибка сервера
+ */
 router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
@@ -179,6 +314,34 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // Удаление сообщения
+/**
+ * @swagger
+ * /api/messages/{id}:
+ *   delete:
+ *     tags: [Messages]
+ *     summary: Удалить сообщение
+ *     description: Удаляет сообщение. Только автор сообщения или модератор могут удалять
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID сообщения
+ *     responses:
+ *       204:
+ *         description: Сообщение успешно удалено
+ *       401:
+ *         description: Не авторизован
+ *       403:
+ *         description: Недостаточно прав для удаления
+ *       404:
+ *         description: Сообщение не найдено
+ *       500:
+ *         description: Ошибка сервера
+ */
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
@@ -202,6 +365,65 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 });
 
 // Поиск сообщений
+/**
+ * @swagger
+ * /api/messages/search:
+ *   get:
+ *     tags: [Messages]
+ *     summary: Поиск сообщений
+ *     description: Поиск сообщений в канале по тексту с поддержкой пагинации
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Поисковый запрос
+ *       - in: query
+ *         name: channelId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID канала
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Номер страницы
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Количество результатов на странице
+ *     responses:
+ *       200:
+ *         description: Результаты поиска
+ *         schema:
+ *           type: object
+ *           properties:
+ *             messages:
+ *               type: array
+ *               items:
+ *                 $ref: '#/definitions/Message'
+ *             total:
+ *               type: integer
+ *             page:
+ *               type: integer
+ *             limit:
+ *               type: integer
+ *             totalPages:
+ *               type: integer
+ *       400:
+ *         description: Неверные параметры запроса
+ *       401:
+ *         description: Не авторизован
+ *       500:
+ *         description: Ошибка сервера
+ */
 router.get('/search', authenticateToken, async (req, res) => {
     try {
         const { query, channelId, page = 1, limit = 50 } = req.query;

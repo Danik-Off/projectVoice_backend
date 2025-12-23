@@ -5,29 +5,140 @@ require('dotenv').config();
 
 // Путь к файлам, которые будут использоваться для генерации документации
 const outputFile = path.join(__dirname, 'swagger-output.json'); // Путь для генерируемого файла
-const endpointsFiles = [path.join(__dirname, '../../index.js')]; // Путь к файлам с роутами
+const endpointsFiles = [
+    path.join(__dirname, '../../routes/auth.js'),
+    path.join(__dirname, '../../routes/user.js'),
+    path.join(__dirname, '../../routes/server.js'),
+    path.join(__dirname, '../../routes/channel.js'),
+    path.join(__dirname, '../../routes/serverMembers.js'),
+    path.join(__dirname, '../../routes/invite.js'),
+    path.join(__dirname, '../../routes/message.js'),
+    path.join(__dirname, '../../routes/admin.js')
+]; // Путь к файлам с роутами
 
 // Конфигурация документации
 const port = process.env.PORT || 5001;
 const host = `localhost:${port}`;
 const doc = {
     info: {
-        title: 'projectVoice Api', // Название API
-        description: 'rest api',
+        title: 'ProjectVoice API',
+        description: 'REST API для голосового приложения ProjectVoice с поддержкой WebRTC. API предоставляет функционал для управления пользователями, серверами, каналами, сообщениями и приглашениями.',
+        version: '1.0.0',
+        contact: {
+            name: 'API Support',
+            email: 'support@projectvoice.com'
+        }
     },
     host, // Хост
-    schemes: ['http'], // Схемы (HTTP/HTTPS)
+    basePath: '/',
+    schemes: ['http', 'https'], // Схемы (HTTP/HTTPS)
+    consumes: ['application/json'],
+    produces: ['application/json'],
+    securityDefinitions: {
+        bearerAuth: {
+            type: 'apiKey',
+            name: 'Authorization',
+            scheme: 'bearer',
+            in: 'header',
+            description: 'JWT токен для аутентификации. Формат: Bearer {token}'
+        }
+    },
     tags: [
-        { name: 'Auth', description: 'API для аутентификации' },
-        { name: 'Users', description: 'API для управления пользователями' },
-        { name: 'Servers', description: 'API для серверов' },
-        { name: 'Channels', description: 'API для каналов на серверах' },
-        { name: 'ServerMembers', description: 'API для участников серверов' },
-        { name: 'Invites', description: 'API для приглашений на сервер' },
+        { name: 'Auth', description: 'API для аутентификации и авторизации пользователей' },
+        { name: 'Users', description: 'API для управления профилями пользователей' },
+        { name: 'Servers', description: 'API для управления серверами (комнатами)' },
+        { name: 'Channels', description: 'API для управления каналами на серверах (текстовые и голосовые)' },
+        { name: 'ServerMembers', description: 'API для управления участниками серверов' },
+        { name: 'Invites', description: 'API для создания и управления приглашениями на серверы' },
+        { name: 'Messages', description: 'API для работы с сообщениями в каналах' },
+        { name: 'Admin', description: 'API для административной панели (требуются права администратора)' },
     ],
+    definitions: {
+        User: {
+            id: 1,
+            username: 'string',
+            email: 'string',
+            role: 'user',
+            isActive: true,
+            profilePicture: 'string',
+            bio: 'string',
+            status: 'online',
+            tag: 'string',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        },
+        Server: {
+            id: 1,
+            name: 'string',
+            description: 'string',
+            icon: 'string',
+            ownerId: 1,
+            isBlocked: false,
+            blockReason: null,
+            blockedAt: null,
+            blockedBy: null,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        },
+        Channel: {
+            id: 1,
+            name: 'string',
+            type: 'text',
+            serverId: 1,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+        },
+        Message: {
+            id: 1,
+            content: 'string',
+            userId: 1,
+            channelId: 1,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+            user: {
+                id: 1,
+                username: 'string',
+                avatar: 'string'
+            },
+            isEdited: false
+        },
+        ServerMember: {
+            id: 1,
+            userId: 1,
+            serverId: 1,
+            role: 'member',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+            user: {
+                id: 1,
+                username: 'string',
+                profilePicture: 'string'
+            }
+        },
+        Invite: {
+            id: 1,
+            token: 'string',
+            serverId: 1,
+            createdBy: 1,
+            maxUses: 10,
+            uses: 0,
+            expiresAt: '2024-12-31T23:59:59.000Z',
+            createdAt: '2024-01-01T00:00:00.000Z'
+        },
+        Error: {
+            error: 'string',
+            message: 'string'
+        },
+        Success: {
+            message: 'string'
+        }
+    }
 };
 
 // Генерация документации
 swaggerAutogen(outputFile, endpointsFiles, doc).then(() => {
-    console.log('Swagger documentation generated successfully!');
+    console.log('✅ Swagger documentation generated successfully!');
+    console.log(`📄 Documentation available at: http://${host}/api-docs`);
+}).catch((error) => {
+    console.error('❌ Error generating Swagger documentation:', error);
 });
