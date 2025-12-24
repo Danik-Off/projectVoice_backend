@@ -21,7 +21,8 @@
         "prettier": "prettier --check '**/*.{js,json,md}'",
         "build": "echo \"Build command placeholder\"",
         "deploy": "echo \"Deploy command placeholder\"",
-        "docs-gen": "node ./utils/swagger/swagger-gen.js"
+        "docs-gen": "node ./utils/swagger/swagger-gen.js",
+        "create-admin": "node scripts/create-admin.js"
     },
     "keywords": [],
     "author": "Ovchinnikov Danila",
