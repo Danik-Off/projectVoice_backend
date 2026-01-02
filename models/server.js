@@ -76,6 +76,7 @@ module.exports = (sequelize, DataTypes) => {
         });
         Server.hasMany(models.ServerMember, { foreignKey: 'serverId', as: 'members' }); // Сервер может иметь множество участников
         Server.hasMany(models.Channel, { foreignKey: 'serverId', as: 'channels' });
+        Server.hasMany(models.Role, { foreignKey: 'serverId', as: 'roles' });
         Server.belongsToMany(models.User, {
             through: models.ServerMember,
             foreignKey: 'serverId',

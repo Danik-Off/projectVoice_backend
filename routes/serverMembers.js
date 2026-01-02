@@ -1,9 +1,10 @@
 const express = require('express');
-const { ServerMember, User, Server } = require('../models');
+const { ServerMember, User, Server, Role, MemberRole, ServerBan } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
-const { isAdmin, isServerOwner, isModerator } = require('../middleware/checkRole'); // Импортируйте необходимые проверки ролей
+const { isAdmin, isServerOwner, isModerator, requirePermission } = require('../middleware/checkRole'); 
+const { Permissions } = require('../utils/permissions');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 // Получить всех участников сервера
 router.get('/:serverId/members', authenticateToken, async (req, res) => {
@@ -18,6 +19,11 @@ router.get('/:serverId/members', authenticateToken, async (req, res) => {
                     as: 'user',
                     attributes: ['id', 'username', 'profilePicture'],
                 },
+                {
+                    model: Role,
+                    as: 'roles',
+                    through: { attributes: [] }
+                }
             ],
         });
 
@@ -27,6 +33,7 @@ router.get('/:serverId/members', authenticateToken, async (req, res) => {
             serverId: member.serverId,
             role: member.role,
             user: member.user,
+            roles: member.roles,
             createdAt: member.createdAt,
             updatedAt: member.updatedAt,
         }));
@@ -76,7 +83,29 @@ router.post('/:serverId/members', authenticateToken, isModerator, async (req, re
             role: newMemberRole,
         });
 
-        res.status(201).json(newMember);
+        // Автоматическое назначение роли в зависимости от переданной роли
+        let targetRoleName = 'Member';
+        if (newMemberRole === 'moderator') targetRoleName = 'Moderator';
+        if (newMemberRole === 'admin') targetRoleName = 'Admin';
+
+        const customRole = await Role.findOne({
+            where: {
+                serverId: req.params.serverId,
+                name: targetRoleName
+            }
+        });
+
+        if (customRole) {
+            await MemberRole.create({
+                memberId: newMember.id,
+                roleId: customRole.id
+            });
+        }
+
+        res.status(201).json({
+            member: newMember,
+            assignedRole: customRole ? customRole.name : null
+        });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -108,19 +137,84 @@ router.put('/:serverId/members/:memberId', authenticateToken, isAdmin, async (re
     }
 });
 
-// Удалить участника из сервера
-router.delete('/:serverId/members/:memberId', authenticateToken, isAdmin, async (req, res) => {
+// Удалить участника из сервера (Kick)
+router.delete('/:serverId/members/:memberId', authenticateToken, requirePermission(Permissions.KICK_MEMBERS), async (req, res) => {
     // #swagger.tags = ['ServerMembers']
     try {
-        const member = await ServerMember.findByPk(req.params.memberId);
+        const member = await ServerMember.findOne({
+            where: { id: req.params.memberId, serverId: req.params.serverId }
+        });
+
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
+        }
+
+        // Нельзя кикнуть владельца
+        if (member.role === 'owner') {
+            return res.status(403).json({ error: 'Cannot kick the server owner' });
         }
 
         await member.destroy();
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Забанить участника (Ban)
+router.post('/:serverId/members/:memberId/ban', authenticateToken, requirePermission(Permissions.BAN_MEMBERS), async (req, res) => {
+    // #swagger.tags = ['ServerMembers']
+    const { reason } = req.body;
+    const { serverId, memberId } = req.params;
+
+    try {
+        const member = await ServerMember.findOne({
+            where: { id: memberId, serverId }
+        });
+
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        if (member.role === 'owner') {
+            return res.status(403).json({ error: 'Cannot ban the server owner' });
+        }
+
+        // Создаем запись о бане
+        await ServerBan.create({
+            serverId,
+            userId: member.userId,
+            reason: reason || 'No reason provided',
+            adminId: req.user.userId
+        });
+
+        // Удаляем участника с сервера
+        await member.destroy();
+
+        res.status(200).json({ message: 'User has been banned' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Управление голосом (Mute/Deafen)
+router.patch('/:serverId/members/:memberId/voice', authenticateToken, requirePermission(Permissions.MUTE_MEMBERS), async (req, res) => {
+    // #swagger.tags = ['ServerMembers']
+    const { isMuted, isDeafened } = req.body;
+    const { serverId, memberId } = req.params;
+
+    try {
+        const member = await ServerMember.findOne({ where: { id: memberId, serverId } });
+        if (!member) return res.status(404).json({ error: 'Member not found' });
+
+        const updateData = {};
+        if (isMuted !== undefined) updateData.isMuted = isMuted;
+        if (isDeafened !== undefined) updateData.isDeafened = isDeafened;
+
+        await member.update(updateData);
+        res.status(200).json(member);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 

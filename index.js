@@ -5,17 +5,16 @@ const fs = require('fs');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
-const webrtc = require('./modules/webrtc/webrtc'); // Подключение логики WebRTC
+// Подключение логики WebRTC
+const webrtc = require('./modules/webrtc/webrtc');
+
+// Исправление для сериализации BigInt в JSON
+BigInt.prototype.toJSON = function() {
+    return this.toString();
+};
 
 // Импорт маршрутов
-const userRoutes = require('./routes/user');
-const authRoutes = require('./routes/auth');
-const serverRoutes = require('./routes/server');
-const channelRoutes = require('./routes/channel');
-const serverMembersRoutes = require('./routes/serverMembers');
-const serverInviteRoutes = require('./routes/invite');
-const adminRoutes = require('./routes/admin');
-const messageRoutes = require('./routes/message');
+const apiRoutes = require('./routes/index');
 
 // Документация Swagger
 const swaggerUi = require('swagger-ui-express');
@@ -28,6 +27,7 @@ const WEBSOCKET_PATH = `/socket`;
 
 // Инициализация Express
 const app = express();
+const PORT = process.env.PORT || 5001;
 const server = http.createServer(app);
 const io = new Server(server, {
     path: WEBSOCKET_PATH,
@@ -81,13 +81,6 @@ app.get('/api/test', (req, res) => {
         timestamp: new Date().toISOString(),
         server: 'ProjectVoice Backend',
         version: '1.0.0',
-        endpoints: {
-            docs: '/api-docs',
-            auth: '/api/auth',
-            users: '/api/users',
-            servers: '/api/servers',
-            messages: '/api/messages'
-        },
         websocket: {
             path: WEBSOCKET_PATH,
             url: `ws://localhost:${process.env.PORT || 5001}${WEBSOCKET_PATH}`
@@ -96,14 +89,7 @@ app.get('/api/test', (req, res) => {
 });
 
 // Подключение маршрутов API
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/servers', serverRoutes);
-app.use('/api/servers', channelRoutes); // Каналы серверов
-app.use('/api/serverMembers', serverMembersRoutes); // Участники серверов
-app.use('/api/invite', serverInviteRoutes); // Приглашения на серверы
-app.use('/api/admin', adminRoutes); // Административная панель
-app.use('/api/messages', messageRoutes); // Сообщения в каналах
+app.use('/api', apiRoutes);
 
 // Swagger документация
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -152,7 +138,6 @@ if (fs.existsSync(frontendBuildPath) && fs.existsSync(frontendIndexPath)) {
 }
 
 // Запуск сервера
-const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
     console.log(`🚀 Сервер запущен на порту ${PORT}`);
     console.log(`📚 Swagger документация: http://localhost:${PORT}/api-docs`);

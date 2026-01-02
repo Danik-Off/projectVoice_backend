@@ -29,6 +29,14 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: 'member', // Роль по умолчанию
             },
+            isMuted: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false,
+            },
+            isDeafened: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false,
+            },
         },
         {
             timestamps: true,
@@ -43,6 +51,12 @@ module.exports = (sequelize, DataTypes) => {
         ServerMember.belongsTo(models.Server, {
             foreignKey: 'serverId',
             as: 'server',
+        });
+        ServerMember.belongsToMany(models.Role, {
+            through: models.MemberRole,
+            foreignKey: 'memberId',
+            otherKey: 'roleId',
+            as: 'roles',
         });
     };
 

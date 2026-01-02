@@ -1,9 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-
-const Invite = require('../models').Invite;
-const Server = require('../models').Server;
-const ServerMember = require('../models').ServerMember;
-
+const { Invite, Server, ServerMember, Role, MemberRole, ServerBan } = require('../models');
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const { isModerator } = require('../middleware/checkRole');
@@ -137,6 +133,15 @@ router.post('/invite/:token/accept', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Invite has reached its maximum uses' });
         }
 
+        // Проверка на бан
+        const isBanned = await ServerBan.findOne({
+            where: { serverId: invite.serverId, userId: req.user.userId }
+        });
+
+        if (isBanned) {
+            return res.status(403).json({ error: 'You are banned from this server' });
+        }
+
         // Проверка, что пользователь не является участником сервера
         const existingMember = await ServerMember.findOne({
             where: { userId: req.user.userId, serverId: invite.serverId },
@@ -147,17 +152,36 @@ router.post('/invite/:token/accept', authenticateToken, async (req, res) => {
         }
 
         // Добавление пользователя на сервер
-        await ServerMember.create({
+        const member = await ServerMember.create({
             userId: req.user.userId,
             serverId: invite.serverId,
             role: 'member',
         });
 
+        // Поиск роли "Member" для автоматического присвоения
+        const memberRole = await Role.findOne({
+            where: {
+                serverId: invite.serverId,
+                name: 'Member'
+            }
+        });
+
+        if (memberRole) {
+            await MemberRole.create({
+                memberId: member.id,
+                roleId: memberRole.id
+            });
+        }
+
         // Увеличение счетчика использования
         invite.uses += 1;
         await invite.save();
 
-        res.status(200).json({ message: 'User added to server' });
+        res.status(200).json({ 
+            message: 'User added to server',
+            member: member,
+            assignedRole: memberRole ? memberRole.name : null
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

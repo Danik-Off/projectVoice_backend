@@ -1,8 +1,10 @@
-const { User } = require('../models');
+const { User, ServerMember, Role, MemberRole } = require('../models');
+const { Permissions, hasPermission, ALL_PERMISSIONS } = require('../utils/permissions');
 
-// Middleware для проверки роли пользователя
+// Middleware для проверки роли пользователя (глобальной)
 const checkRole = (requiredRoles) => {
     return async (req, res, next) => {
+// ... (rest of the checkRole function remains same, just updating imports)
         try {
             console.log('🔍 Проверка роли для пользователя:', req.user.userId);
             console.log('🔍 Требуемые роли:', requiredRoles);
@@ -32,6 +34,84 @@ const checkRole = (requiredRoles) => {
             next();
         } catch (error) {
             console.error('❌ Ошибка проверки роли:', error);
+            res.status(500).json({ error: 'Ошибка сервера' });
+        }
+    };
+};
+
+// Middleware для проверки разрешений на сервере
+const requirePermission = (permission) => {
+    return async (req, res, next) => {
+        try {
+            const serverId = req.params.serverId || req.body.serverId;
+            if (!serverId) {
+                return res.status(400).json({ error: 'ID сервера не указан' });
+            }
+
+            const member = await ServerMember.findOne({
+                where: {
+                    serverId,
+                    userId: req.user.userId
+                },
+                include: [
+                    {
+                        model: Role,
+                        as: 'roles',
+                        through: { attributes: [] }
+                    }
+                ]
+            });
+
+            if (!member) {
+                return res.status(403).json({ error: 'Вы не являетесь участником этого сервера' });
+            }
+
+            // Получаем роль @everyone для базовых прав и позиции
+            const everyoneRole = await Role.findOne({
+                where: {
+                    serverId,
+                    name: '@everyone'
+                }
+            });
+
+            // Находим позицию самой высокой роли участника
+            let maxPosition = 0;
+            if (everyoneRole) maxPosition = everyoneRole.position;
+            if (member.roles && member.roles.length > 0) {
+                const positions = member.roles.map(r => r.position);
+                maxPosition = Math.max(maxPosition, ...positions);
+            }
+
+            // Добавляем полезную информацию в запрос
+            req.member = member;
+            req.maxRolePosition = maxPosition;
+
+            // Владелец сервера имеет все права
+            if (member.role === 'owner') {
+                req.memberPermissions = ALL_PERMISSIONS;
+                return next();
+            }
+
+            // Вычисляем общие права из всех ролей участника
+            let userPermissions = 0n;
+            if (everyoneRole) {
+                userPermissions |= BigInt(everyoneRole.permissions);
+            }
+
+            if (member.roles && member.roles.length > 0) {
+                member.roles.forEach(role => {
+                    userPermissions |= BigInt(role.permissions);
+                });
+            }
+
+            if (!hasPermission(userPermissions, permission)) {
+                return res.status(403).json({ error: 'Недостаточно прав на сервере' });
+            }
+
+            req.memberPermissions = userPermissions;
+            next();
+        } catch (error) {
+            console.error('Ошибка проверки разрешений:', error);
             res.status(500).json({ error: 'Ошибка сервера' });
         }
     };
@@ -74,6 +154,7 @@ const isServerOwner = async (req, res, next) => {
 
 module.exports = {
     checkRole,
+    requirePermission,
     isModerator,
     isAdmin,
     isServerOwner

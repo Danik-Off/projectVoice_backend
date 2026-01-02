@@ -1,8 +1,9 @@
 const express = require('express');
 const { Channel } = require('../models'); // Импортируем модель Channel
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 const { authenticateToken } = require('../middleware/auth');
-const { isModerator } = require('../middleware/checkRole'); // Импортируйте необходимые проверки ролей
+const { requirePermission } = require('../middleware/checkRole'); 
+const { Permissions } = require('../utils/permissions');
 
 // Получить все каналы по serverId
 router.get('/:serverId/channels', authenticateToken, async (req, res) => {
@@ -17,7 +18,7 @@ router.get('/:serverId/channels', authenticateToken, async (req, res) => {
 });
 
 // Создать новый канал в указанном сервере
-router.post('/:serverId/channels', authenticateToken, isModerator, async (req, res) => {
+router.post('/:serverId/channels', authenticateToken, requirePermission(Permissions.MANAGE_CHANNELS), async (req, res) => {
     // #swagger.tags = ['Channels']
     const { name, type } = req.body; // serverId теперь в URL
     const { serverId } = req.params; // Получаем serverId из параметров
@@ -45,7 +46,7 @@ router.get('/:serverId/channels/:channelId', async (req, res) => {
 });
 
 // Обновить канал по ID в рамках конкретного сервера
-router.put('/:serverId/channels/:channelId', authenticateToken, isModerator, async (req, res) => {
+router.put('/:serverId/channels/:channelId', authenticateToken, requirePermission(Permissions.MANAGE_CHANNELS), async (req, res) => {
     // #swagger.tags = ['Channels']
     const { name, type } = req.body; // serverId теперь в URL
     const { channelId } = req.params; // Получаем channelId из параметров
@@ -62,7 +63,7 @@ router.put('/:serverId/channels/:channelId', authenticateToken, isModerator, asy
 });
 
 // Удалить канал по ID в рамках конкретного сервера
-router.delete('/:serverId/channels/:channelId', authenticateToken, isModerator, async (req, res) => {
+router.delete('/:serverId/channels/:channelId', authenticateToken, requirePermission(Permissions.MANAGE_CHANNELS), async (req, res) => {
     // #swagger.tags = ['Channels']
     const { channelId } = req.params; // Получаем channelId из параметров
     try {

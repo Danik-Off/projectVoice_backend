@@ -1,7 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { Server, User, Channel, ServerMember, Message } = require('../models'); // Include ServerMember model
+const { Server, User, Channel, ServerMember, Message, Role, MemberRole } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/checkRole');
+const { Permissions } = require('../utils/permissions');
+const DiscordStyles = require('../config/discord.config');
 const { where } = require('sequelize');
 
 const router = express.Router();
@@ -47,14 +50,38 @@ router.post('/', authenticateToken, async (req, res) => {
         // Создаем новый сервер
         const newServer = await Server.create({ name, ownerId: req.user.userId, description, icon });
 
-        // Добавляем создателя как участника с ролью владельца
-        await ServerMember.create({
+        // Создаем все базовые роли из глобального конфига
+        const createdRoles = [];
+        for (const roleDef of DiscordStyles.defaultRoles) {
+            const role = await Role.create({
+                serverId: newServer.id,
+                ...roleDef
+            });
+            createdRoles.push(role);
+        }
+
+        // Находим роль Owner для назначения создателю
+        const ownerRole = createdRoles.find(r => r.name === 'Owner');
+
+        // Добавляем создателя как участника
+        const member = await ServerMember.create({
             userId: req.user.userId,
             serverId: newServer.id,
             role: 'owner',
         });
 
-        res.status(201).json(newServer);
+        // Присваиваем создателю роль Owner
+        if (ownerRole) {
+            await MemberRole.create({
+                memberId: member.id,
+                roleId: ownerRole.id,
+            });
+        }
+
+        res.status(201).json({
+            server: newServer,
+            roles: createdRoles
+        });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -80,6 +107,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
                 {
                     model: Channel,
                     as: 'channels'
+                },
+                {
+                    model: Role,
+                    as: 'roles'
                 },
                 {
                     model: User,
@@ -163,12 +194,14 @@ const checkServerOwnership = async (req, res, next) => {
 };
 
 // Обновить сервер по ID
-router.put('/:id', authenticateToken, checkServerOwnership, async (req, res) => {
+router.put('/:id', authenticateToken, requirePermission(Permissions.MANAGE_GUILD), async (req, res) => {
     // #swagger.tags = ['Servers']
     const { name, description, icon } = req.body;
     try {
-        await req.server.update({ name, description, icon });
-        res.status(200).json(req.server);
+        const server = await Server.findByPk(req.params.id);
+        if (!server) return res.status(404).json({ error: 'Server not found' });
+        await server.update({ name, description, icon });
+        res.status(200).json(server);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
