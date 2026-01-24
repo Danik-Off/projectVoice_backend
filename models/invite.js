@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: 0,
         },
     });
-    
+
     Invite.associate = (models) => {
         Invite.belongsTo(models.Server, {
             foreignKey: 'serverId',

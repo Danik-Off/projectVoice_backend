@@ -1,8 +1,9 @@
-const express = require('express');
 const bcrypt = require('bcryptjs');
+const express = require('express');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+
 const { authenticateToken } = require('../middleware/auth');
+const { User } = require('../models');
 
 const router = express.Router();
 
@@ -26,14 +27,27 @@ router.post('/register', async (req, res) => {
         const user = await User.create({ username, email, password: hashedPassword });
 
         // Создание JWT токена
-        const token = jwt.sign({ 
-            userId: user.id,
-            isAdmin: user.role === 'admin'
-        }, process.env.JWT_SECRET, { expiresIn: '7d' });
-        res.status(201).json({ token });
+        const token = jwt.sign(
+            {
+                userId: user.id,
+                isAdmin: user.role === 'admin',
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        res.status(201).json({
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                isActive: user.isActive,
+            },
+        });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'Ошибка сервера.', error });
+        console.error('Ошибка при регистрации:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера.' });
     }
 });
 
@@ -55,21 +69,26 @@ router.post('/login', async (req, res) => {
         }
 
         // Создание JWT токена
-        const token = jwt.sign({ 
-            userId: user.id,
-            isAdmin: user.role === 'admin'
-        }, process.env.JWT_SECRET, { expiresIn: '7d' });
-        res.json({ 
+        const token = jwt.sign(
+            {
+                userId: user.id,
+                isAdmin: user.role === 'admin',
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        res.json({
             token,
             user: {
                 id: user.id,
                 username: user.username,
                 email: user.email,
                 role: user.role,
-                isActive: user.isActive
-            }
+                isActive: user.isActive,
+            },
         });
     } catch (error) {
+        console.error('Ошибка входа:', error);
         res.status(500).json({ error: 'Ошибка сервера.' });
     }
 });
@@ -79,9 +98,9 @@ router.get('/me', authenticateToken, async (req, res) => {
     // #swagger.tags = ['Auth']
     try {
         const user = await User.findByPk(req.user.userId, {
-            attributes: { exclude: ['password'] }
+            attributes: { exclude: ['password'] },
         });
-        
+
         if (!user) {
             return res.status(404).json({ error: 'Пользователь не найден.' });
         }
@@ -95,9 +114,10 @@ router.get('/me', authenticateToken, async (req, res) => {
             profilePicture: user.profilePicture,
             status: user.status,
             tag: user.tag,
-            createdAt: user.createdAt
+            createdAt: user.createdAt,
         });
     } catch (error) {
+        console.error('Ошибка получения профиля:', error);
         res.status(500).json({ error: 'Ошибка сервера.' });
     }
 });

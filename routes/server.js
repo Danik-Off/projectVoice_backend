@@ -1,11 +1,10 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const { Server, User, Channel, ServerMember, Message, Role, MemberRole } = require('../models');
+
+const DiscordStyles = require('../config/discord.config');
 const { authenticateToken } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/checkRole');
+const { Server, User, Channel, ServerMember, Message, Role, MemberRole } = require('../models');
 const { Permissions } = require('../utils/permissions');
-const DiscordStyles = require('../config/discord.config');
-const { where } = require('sequelize');
 
 const router = express.Router();
 
@@ -15,7 +14,7 @@ router.get('/', authenticateToken, async (req, res) => {
     try {
         const servers = await Server.findAll({
             where: {
-                isBlocked: false // Показываем только незаблокированные серверы
+                isBlocked: false, // Показываем только незаблокированные серверы
             },
             include: [
                 {
@@ -26,19 +25,20 @@ router.get('/', authenticateToken, async (req, res) => {
                         {
                             model: User,
                             as: 'user',
-                            attributes: ['id', 'username', 'profilePicture']
-                        }
-                    ]
+                            attributes: ['id', 'username', 'profilePicture'],
+                        },
+                    ],
                 },
                 {
                     model: Channel,
-                    as: 'channels'
-                }
+                    as: 'channels',
+                },
             ],
         });
         res.status(200).json(servers);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Ошибка при получении серверов:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера.' });
     }
 });
 
@@ -48,20 +48,25 @@ router.post('/', authenticateToken, async (req, res) => {
     const { name, description, icon } = req.body;
     try {
         // Создаем новый сервер
-        const newServer = await Server.create({ name, ownerId: req.user.userId, description, icon });
+        const newServer = await Server.create({
+            name,
+            ownerId: req.user.userId,
+            description,
+            icon,
+        });
 
         // Создаем все базовые роли из глобального конфига
         const createdRoles = [];
         for (const roleDef of DiscordStyles.defaultRoles) {
             const role = await Role.create({
                 serverId: newServer.id,
-                ...roleDef
+                ...roleDef,
             });
             createdRoles.push(role);
         }
 
         // Находим роль Owner для назначения создателю
-        const ownerRole = createdRoles.find(r => r.name === 'Owner');
+        const ownerRole = createdRoles.find((r) => r.name === 'Owner');
 
         // Добавляем создателя как участника
         const member = await ServerMember.create({
@@ -80,10 +85,13 @@ router.post('/', authenticateToken, async (req, res) => {
 
         res.status(201).json({
             server: newServer,
-            roles: createdRoles
+            roles: createdRoles,
         });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error('Ошибка при создании сервера:', error);
+        res.status(400).json({
+            error: 'Не удалось создать сервер. Проверьте правильность данных.',
+        });
     }
 });
 
@@ -100,147 +108,119 @@ router.get('/:id', authenticateToken, async (req, res) => {
                         {
                             model: User,
                             as: 'user',
-                            attributes: ['id', 'username', 'profilePicture']
-                        }
-                    ]
+                            attributes: ['id', 'username', 'profilePicture'],
+                        },
+                    ],
                 },
                 {
                     model: Channel,
-                    as: 'channels'
+                    as: 'channels',
                 },
                 {
                     model: Role,
-                    as: 'roles'
+                    as: 'roles',
                 },
                 {
                     model: User,
                     as: 'blockedByUser',
-                    attributes: ['id', 'username']
-                }
+                    attributes: ['id', 'username'],
+                },
             ],
         });
-        
+
         if (!server) {
-            return res.status(404).json({ message: 'Server not found' });
+            return res.status(404).json({ error: 'Сервер не найден.' });
         }
 
         // Если сервер заблокирован, возвращаем информацию о блокировке
         if (server.isBlocked) {
             return res.status(403).json({
-                message: 'Server is blocked',
+                error: 'Сервер заблокирован.',
                 server: {
                     id: server.id,
                     name: server.name,
                     isBlocked: server.isBlocked,
                     blockReason: server.blockReason,
                     blockedAt: server.blockedAt,
-                    blockedBy: server.blockedByUser ? {
-                        id: server.blockedByUser.id,
-                        username: server.blockedByUser.username
-                    } : null
-                }
+                    blockedBy: server.blockedByUser
+                        ? {
+                              id: server.blockedByUser.id,
+                              username: server.blockedByUser.username,
+                          }
+                        : null,
+                },
             });
         }
 
         res.status(200).json(server);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Ошибка при получении сервера:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера.' });
     }
 });
-
-// Проверка прав владельца сервера или администратора
-const checkServerOwnership = async (req, res, next) => {
-    // #swagger.tags = ['Servers']
-    const server = await Server.findByPk(req.params.id);
-
-    if (!server) {
-        return res.status(404).json({ message: 'Server not found' });
-    }
-
-    // Проверяем, заблокирован ли сервер
-    if (server.isBlocked) {
-        return res.status(403).json({ 
-            message: 'Server is blocked',
-            server: {
-                id: server.id,
-                name: server.name,
-                isBlocked: server.isBlocked,
-                blockReason: server.blockReason,
-                blockedAt: server.blockedAt
-            }
-        });
-    }
-
-    // Проверяем, является ли пользователь владельцем сервера по полю ownerId
-    const isOwnerByField = server.ownerId === req.user.userId;
-    
-    // Проверяем, является ли пользователь владельцем сервера по роли в ServerMembers
-    const member = await ServerMember.findOne({
-        where: {
-            serverId: req.params.id,
-            userId: req.user.userId,
-            role: 'owner'
-        }
-    });
-    const isOwnerByRole = !!member;
-
-    // Пользователь может редактировать сервер, если он владелец по любому из критериев или администратор
-    if (!isOwnerByField && !isOwnerByRole && !req.user.isAdmin) {
-        return res.status(403).json({ error: 'Access denied' });
-    }
-
-    req.server = server;
-    next();
-};
 
 // Обновить сервер по ID
-router.put('/:id', authenticateToken, requirePermission(Permissions.MANAGE_GUILD), async (req, res) => {
-    // #swagger.tags = ['Servers']
-    const { name, description, icon } = req.body;
-    try {
-        const server = await Server.findByPk(req.params.id);
-        if (!server) return res.status(404).json({ error: 'Server not found' });
-        await server.update({ name, description, icon });
-        res.status(200).json(server);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+router.put(
+    '/:id',
+    authenticateToken,
+    requirePermission(Permissions.MANAGE_GUILD),
+    async (req, res) => {
+        // #swagger.tags = ['Servers']
+        const { name, description, icon } = req.body;
+        try {
+            const server = await Server.findByPk(req.params.id);
+            if (!server) return res.status(404).json({ error: 'Сервер не найден.' });
+            await server.update({ name, description, icon });
+            res.status(200).json(server);
+        } catch (error) {
+            console.error('Ошибка при обновлении сервера:', error);
+            res.status(400).json({ error: 'Не удалось обновить сервер.' });
+        }
     }
-});
+);
 
 // Удалить сервер по ID, включая все связи участников
-router.delete('/:id', authenticateToken, checkServerOwnership, async (req, res) => {
-    // #swagger.tags = ['Servers']
-    try {
-        console.log(`Удаление сервера с ID: ${req.params.id}`);
-        
-        // Получаем все каналы сервера
-        const channels = await Channel.findAll({ where: { serverId: req.params.id } });
-        const channelIds = channels.map(channel => channel.id);
-        console.log(`Найдено каналов для удаления: ${channelIds.length}`);
+router.delete(
+    '/:id',
+    authenticateToken,
+    requirePermission(Permissions.ADMINISTRATOR),
+    async (req, res) => {
+        // #swagger.tags = ['Servers']
+        try {
+            const serverId = req.params.id;
+            const server = await Server.findByPk(serverId);
 
-        // Удаляем все сообщения в каналах сервера
-        if (channelIds.length > 0) {
-            const deletedMessages = await Message.destroy({ where: { channelId: channelIds } });
-            console.log(`Удалено сообщений: ${deletedMessages}`);
+            if (!server) {
+                return res.status(404).json({ error: 'Сервер не найден.' });
+            }
+
+            console.log(`Удаление сервера с ID: ${serverId}`);
+
+            // Получаем все каналы сервера
+            const channels = await Channel.findAll({ where: { serverId } });
+            const channelIds = channels.map((channel) => channel.id);
+
+            // Удаляем все сообщения в каналах сервера
+            if (channelIds.length > 0) {
+                await Message.destroy({ where: { channelId: channelIds } });
+            }
+
+            // Удаляем все каналы сервера
+            await Channel.destroy({ where: { serverId } });
+
+            // Удаляем все связи участников сервера
+            await ServerMember.destroy({ where: { serverId } });
+
+            // Удаляем сервер
+            await server.destroy();
+            console.log('Сервер успешно удален');
+
+            res.status(204).send();
+        } catch (error) {
+            console.error('Ошибка удаления сервера:', error);
+            res.status(500).json({ error: 'Ошибка сервера при удалении.' });
         }
-
-        // Удаляем все каналы сервера
-        const deletedChannels = await Channel.destroy({ where: { serverId: req.params.id } });
-        console.log(`Удалено каналов: ${deletedChannels}`);
-
-        // Удаляем все связи участников сервера
-        const deletedMembers = await ServerMember.destroy({ where: { serverId: req.params.id } });
-        console.log(`Удалено участников: ${deletedMembers}`);
-
-        // Удаляем сервер
-        await req.server.destroy();
-        console.log('Сервер успешно удален');
-
-        res.status(204).send();
-    } catch (error) {
-        console.error('Ошибка удаления сервера:', error);
-        res.status(500).json({ error: error.message });
     }
-});
+);
 
 module.exports = router;

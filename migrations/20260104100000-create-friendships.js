@@ -2,7 +2,7 @@
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('ServerMembers', {
+        await queryInterface.createTable('Friendships', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -12,26 +12,26 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Users', // Название таблицы, с которой будет связь
+                    model: 'Users',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
-            serverId: {
+            friendId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Servers', // Название таблицы, с которой будет связь
+                    model: 'Users',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
-            role: {
-                type: Sequelize.ENUM('member', 'moderator', 'admin', 'owner'), // Роли участников
+            status: {
+                type: Sequelize.ENUM('pending', 'accepted', 'blocked'),
                 allowNull: false,
-                defaultValue: 'member',
+                defaultValue: 'pending',
             },
             createdAt: {
                 allowNull: false,
@@ -42,9 +42,14 @@ module.exports = {
                 type: Sequelize.DATE,
             },
         });
+
+        // Уникальный индекс, чтобы нельзя было создать дубликат дружбы в одном направлении
+        await queryInterface.addIndex('Friendships', ['userId', 'friendId'], {
+            unique: true,
+        });
     },
 
     async down(queryInterface) {
-        await queryInterface.dropTable('ServerMembers');
+        await queryInterface.dropTable('Friendships');
     },
 };

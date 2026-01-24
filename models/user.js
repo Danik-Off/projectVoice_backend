@@ -48,10 +48,10 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.TEXT,
                 allowNull: true,
             },
-            tag:{
-                type:DataTypes.TEXT,
+            tag: {
+                type: DataTypes.TEXT,
                 allowNull: true,
-            }
+            },
         },
         {
             timestamps: true,
@@ -68,6 +68,16 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'userId',
             otherKey: 'serverId',
             as: 'servers',
+        });
+        // Друзья (отправленные запросы или принятые друзьями)
+        User.hasMany(models.Friendship, {
+            foreignKey: 'userId',
+            as: 'friendshipsInitiated',
+        });
+        // Друзья (полученные запросы)
+        User.hasMany(models.Friendship, {
+            foreignKey: 'friendId',
+            as: 'friendshipsReceived',
         });
     };
 

@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 // Middleware для проверки токена
 const authenticateToken = (req, res, next) => {
     console.log('🔐 Аутентификация запроса:', req.method, req.url);
-    
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -19,13 +19,13 @@ const authenticateToken = (req, res, next) => {
             console.log('❌ Недействительный токен:', err.message);
             return res.status(403).json({ error: 'Недействительный токен.' });
         }
-        
+
         console.log('✅ Токен валиден, пользователь:', user);
-        
+
         // Преобразуем userId в id для совместимости
         req.user = {
             ...user,
-            id: user.userId
+            id: user.userId,
         };
         next();
     });

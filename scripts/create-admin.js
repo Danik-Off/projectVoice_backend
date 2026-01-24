@@ -1,7 +1,7 @@
 /**
  * Скрипт для создания администратора
  * Запуск: node scripts/create-admin.js
- * 
+ *
  * Создает администратора с учетными данными:
  * Email: admin@projectvoice.com
  * Username: admin
@@ -10,26 +10,27 @@
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const bcrypt = require('bcryptjs');
+
 const { User } = require('../models');
 
 async function createAdmin() {
     try {
         console.log('🔐 Создание администратора...');
-        
+
         // Данные администратора
         const adminData = {
             username: process.env.ADMIN_USERNAME || 'admin',
             email: process.env.ADMIN_EMAIL || 'admin@projectvoice.com',
             password: process.env.ADMIN_PASSWORD || 'admin123',
             role: 'admin',
-            isActive: true
+            isActive: true,
         };
 
         // Проверка существования администратора
-        const existingAdmin = await User.findOne({ 
-            where: { 
-                email: adminData.email 
-            } 
+        const existingAdmin = await User.findOne({
+            where: {
+                email: adminData.email,
+            },
         });
 
         if (existingAdmin) {
@@ -42,7 +43,7 @@ async function createAdmin() {
             } else {
                 console.log('ℹ️  Администратор уже существует');
             }
-            
+
             console.log('\n📋 Учетные данные администратора:');
             console.log(`   Email: ${adminData.email}`);
             console.log(`   Username: ${existingAdmin.username}`);
@@ -59,7 +60,7 @@ async function createAdmin() {
             email: adminData.email,
             password: hashedPassword,
             role: 'admin',
-            isActive: true
+            isActive: true,
         });
 
         console.log('✅ Администратор успешно создан!');
@@ -71,7 +72,6 @@ async function createAdmin() {
         console.log(`   Role: ${admin.role}`);
         console.log('\n⚠️  ВАЖНО: Измените пароль после первого входа!');
         console.log('   Для изменения пароля используйте API или обновите в базе данных');
-        
     } catch (error) {
         console.error('❌ Ошибка при создании администратора:', error.message);
         if (error.name === 'SequelizeUniqueConstraintError') {
@@ -90,4 +90,3 @@ async function createAdmin() {
 
 // Запуск скрипта
 createAdmin();
-

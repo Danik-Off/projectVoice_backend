@@ -18,28 +18,58 @@ const DiscordStyles = {
         {
             name: '@everyone',
             color: '#99AAB5',
-            permissions: Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES | Permissions.CONNECT | Permissions.SPEAK | Permissions.READ_MESSAGE_HISTORY | Permissions.ADD_REACTIONS,
+            permissions:
+                Permissions.VIEW_CHANNEL |
+                Permissions.SEND_MESSAGES |
+                Permissions.CONNECT |
+                Permissions.SPEAK |
+                Permissions.READ_MESSAGE_HISTORY |
+                Permissions.ADD_REACTIONS,
             position: 0,
             isHoisted: false,
         },
         {
             name: 'Member',
             color: '#57F287', // Discord Green
-            permissions: Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES | Permissions.CONNECT | Permissions.SPEAK | Permissions.READ_MESSAGE_HISTORY | Permissions.ADD_REACTIONS | Permissions.CHANGE_NICKNAME,
+            permissions:
+                Permissions.VIEW_CHANNEL |
+                Permissions.SEND_MESSAGES |
+                Permissions.CONNECT |
+                Permissions.SPEAK |
+                Permissions.READ_MESSAGE_HISTORY |
+                Permissions.ADD_REACTIONS |
+                Permissions.CHANGE_NICKNAME,
             position: 1,
             isHoisted: false,
         },
         {
             name: 'Moderator',
             color: '#5865F2', // Discord Blurple
-            permissions: Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES | Permissions.CONNECT | Permissions.SPEAK | Permissions.READ_MESSAGE_HISTORY | Permissions.ADD_REACTIONS | Permissions.MANAGE_MESSAGES | Permissions.KICK_MEMBERS | Permissions.BAN_MEMBERS | Permissions.MUTE_MEMBERS | Permissions.DEAFEN_MEMBERS | Permissions.MOVE_MEMBERS,
+            permissions:
+                Permissions.VIEW_CHANNEL |
+                Permissions.SEND_MESSAGES |
+                Permissions.CONNECT |
+                Permissions.SPEAK |
+                Permissions.READ_MESSAGE_HISTORY |
+                Permissions.ADD_REACTIONS |
+                Permissions.MANAGE_MESSAGES |
+                Permissions.KICK_MEMBERS |
+                Permissions.BAN_MEMBERS |
+                Permissions.MUTE_MEMBERS |
+                Permissions.DEAFEN_MEMBERS |
+                Permissions.MOVE_MEMBERS,
             position: 2,
             isHoisted: true,
         },
         {
             name: 'Admin',
             color: '#E67E22', // Discord Orange
-            permissions: Permissions.ADMINISTRATOR | Permissions.MANAGE_GUILD | Permissions.MANAGE_CHANNELS | Permissions.MANAGE_ROLES | Permissions.VIEW_AUDIT_LOG,
+            permissions:
+                Permissions.ADMINISTRATOR |
+                Permissions.MANAGE_GUILD |
+                Permissions.MANAGE_CHANNELS |
+                Permissions.MANAGE_ROLES |
+                Permissions.VIEW_AUDIT_LOG,
             position: 3,
             isHoisted: true,
         },
@@ -49,9 +79,8 @@ const DiscordStyles = {
             permissions: Permissions.ADMINISTRATOR,
             position: 4,
             isHoisted: true,
-        }
-    ]
+        },
+    ],
 };
 
 module.exports = DiscordStyles;
-

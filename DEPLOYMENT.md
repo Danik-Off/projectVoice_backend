@@ -5,6 +5,7 @@
 ### 1. Установка MySQL
 
 #### macOS (через Homebrew)
+
 ```bash
 # Установка Homebrew (если не установлен)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -20,6 +21,7 @@ brew services list | grep mysql
 ```
 
 #### Ubuntu/Debian
+
 ```bash
 # Обновление пакетов
 sudo apt update
@@ -36,6 +38,7 @@ sudo systemctl status mysql
 ```
 
 #### Windows
+
 1. Скачайте MySQL Installer с официального сайта: https://dev.mysql.com/downloads/installer/
 2. Запустите установщик и следуйте инструкциям
 3. Запустите MySQL как службу Windows
@@ -43,6 +46,7 @@ sudo systemctl status mysql
 ### 2. Установка Node.js и npm
 
 #### macOS
+
 ```bash
 # Установка через Homebrew
 brew install node
@@ -53,6 +57,7 @@ npm --version
 ```
 
 #### Ubuntu/Debian
+
 ```bash
 # Установка Node.js
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -

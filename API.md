@@ -7,14 +7,14 @@
 - [Базовый URL](#базовый-url)
 - [Аутентификация](#аутентификация)
 - [Эндпоинты](#эндпоинты)
-  - [Auth (Аутентификация)](#auth-аутентификация)
-  - [Users (Пользователи)](#users-пользователи)
-  - [Servers (Серверы)](#servers-серверы)
-  - [Channels (Каналы)](#channels-каналы)
-  - [Messages (Сообщения)](#messages-сообщения)
-  - [ServerMembers (Участники серверов)](#servermembers-участники-серверов)
-  - [Invites (Приглашения)](#invites-приглашения)
-  - [Admin (Административная панель)](#admin-административная-панель)
+    - [Auth (Аутентификация)](#auth-аутентификация)
+    - [Users (Пользователи)](#users-пользователи)
+    - [Servers (Серверы)](#servers-серверы)
+    - [Channels (Каналы)](#channels-каналы)
+    - [Messages (Сообщения)](#messages-сообщения)
+    - [ServerMembers (Участники серверов)](#servermembers-участники-серверов)
+    - [Invites (Приглашения)](#invites-приглашения)
+    - [Admin (Административная панель)](#admin-административная-панель)
 - [Коды ошибок](#коды-ошибок)
 - [Примеры использования](#примеры-использования)
 
@@ -43,22 +43,25 @@ Authorization: Bearer <your_jwt_token>
 Регистрация нового пользователя.
 
 **Тело запроса:**
+
 ```json
 {
-  "username": "string",
-  "email": "string",
-  "password": "string"
+    "username": "string",
+    "email": "string",
+    "password": "string"
 }
 ```
 
 **Ответ (201):**
+
 ```json
 {
-  "token": "jwt_token_here"
+    "token": "jwt_token_here"
 }
 ```
 
 **Ошибки:**
+
 - `400` - Не переданы обязательные параметры или пользователь уже существует
 - `500` - Ошибка сервера
 
@@ -69,28 +72,31 @@ Authorization: Bearer <your_jwt_token>
 Вход в систему.
 
 **Тело запроса:**
+
 ```json
 {
-  "email": "string",
-  "password": "string"
+    "email": "string",
+    "password": "string"
 }
 ```
 
 **Ответ (200):**
+
 ```json
 {
-  "token": "jwt_token_here",
-  "user": {
-    "id": 1,
-    "username": "string",
-    "email": "string",
-    "role": "user",
-    "isActive": true
-  }
+    "token": "jwt_token_here",
+    "user": {
+        "id": 1,
+        "username": "string",
+        "email": "string",
+        "role": "user",
+        "isActive": true
+    }
 }
 ```
 
 **Ошибки:**
+
 - `400` - Неверный пароль
 - `404` - Пользователь не найден
 - `500` - Ошибка сервера
@@ -104,17 +110,18 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 {
-  "id": 1,
-  "username": "string",
-  "email": "string",
-  "role": "user",
-  "isActive": true,
-  "profilePicture": "string",
-  "status": "online",
-  "tag": "string",
-  "createdAt": "2024-01-01T00:00:00.000Z"
+    "id": 1,
+    "username": "string",
+    "email": "string",
+    "role": "user",
+    "isActive": true,
+    "profilePicture": "string",
+    "status": "online",
+    "tag": "string",
+    "createdAt": "2024-01-01T00:00:00.000Z"
 }
 ```
 
@@ -129,14 +136,15 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 {
-  "id": 1,
-  "username": "string",
-  "profilePicture": "string",
-  "bio": "string",
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-01-01T00:00:00.000Z"
+    "id": 1,
+    "username": "string",
+    "profilePicture": "string",
+    "bio": "string",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
 }
 ```
 
@@ -149,14 +157,15 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 {
-  "id": 1,
-  "name": "string",
-  "profilePicture": "string",
-  "bio": "string",
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-01-01T00:00:00.000Z"
+    "id": 1,
+    "name": "string",
+    "profilePicture": "string",
+    "bio": "string",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
 }
 ```
 
@@ -169,21 +178,23 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Тело запроса:**
+
 ```json
 {
-  "name": "string",
-  "profilePicture": "string",
-  "bio": "string"
+    "name": "string",
+    "profilePicture": "string",
+    "bio": "string"
 }
 ```
 
 **Ответ (200):**
+
 ```json
 {
-  "id": 1,
-  "username": "string",
-  "profilePicture": "string",
-  "bio": "string"
+    "id": 1,
+    "username": "string",
+    "profilePicture": "string",
+    "bio": "string"
 }
 ```
 
@@ -196,9 +207,10 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 {
-  "message": "User deleted successfully"
+    "message": "User deleted successfully"
 }
 ```
 
@@ -213,17 +225,18 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 [
-  {
-    "id": 1,
-    "name": "string",
-    "description": "string",
-    "icon": "string",
-    "ownerId": 1,
-    "channels": [],
-    "members": []
-  }
+    {
+        "id": 1,
+        "name": "string",
+        "description": "string",
+        "icon": "string",
+        "ownerId": 1,
+        "channels": [],
+        "members": []
+    }
 ]
 ```
 
@@ -236,22 +249,24 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Тело запроса:**
+
 ```json
 {
-  "name": "string",
-  "description": "string",
-  "icon": "string"
+    "name": "string",
+    "description": "string",
+    "icon": "string"
 }
 ```
 
 **Ответ (201):**
+
 ```json
 {
-  "id": 1,
-  "name": "string",
-  "description": "string",
-  "icon": "string",
-  "ownerId": 1
+    "id": 1,
+    "name": "string",
+    "description": "string",
+    "icon": "string",
+    "ownerId": 1
 }
 ```
 
@@ -264,19 +279,21 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 {
-  "id": 1,
-  "name": "string",
-  "description": "string",
-  "icon": "string",
-  "ownerId": 1,
-  "channels": [],
-  "members": []
+    "id": 1,
+    "name": "string",
+    "description": "string",
+    "icon": "string",
+    "ownerId": 1,
+    "channels": [],
+    "members": []
 }
 ```
 
 **Ошибки:**
+
 - `403` - Сервер заблокирован
 
 ---
@@ -288,11 +305,12 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права владельца или администратора
 
 **Тело запроса:**
+
 ```json
 {
-  "name": "string",
-  "description": "string",
-  "icon": "string"
+    "name": "string",
+    "description": "string",
+    "icon": "string"
 }
 ```
 
@@ -317,14 +335,15 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 [
-  {
-    "id": 1,
-    "name": "string",
-    "type": "text",
-    "serverId": 1
-  }
+    {
+        "id": 1,
+        "name": "string",
+        "type": "text",
+        "serverId": 1
+    }
 ]
 ```
 
@@ -337,22 +356,24 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права модератора
 
 **Тело запроса:**
+
 ```json
 {
-  "name": "string",
-  "type": "text"
+    "name": "string",
+    "type": "text"
 }
 ```
 
 **Типы каналов:** `text`, `voice`
 
 **Ответ (201):**
+
 ```json
 {
-  "id": 1,
-  "name": "string",
-  "type": "text",
-  "serverId": 1
+    "id": 1,
+    "name": "string",
+    "type": "text",
+    "serverId": 1
 }
 ```
 
@@ -363,12 +384,13 @@ Authorization: Bearer <your_jwt_token>
 Получение информации о канале.
 
 **Ответ (200):**
+
 ```json
 {
-  "id": 1,
-  "name": "string",
-  "type": "text",
-  "serverId": 1
+    "id": 1,
+    "name": "string",
+    "type": "text",
+    "serverId": 1
 }
 ```
 
@@ -381,10 +403,11 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права модератора
 
 **Тело запроса:**
+
 ```json
 {
-  "name": "string",
-  "type": "text"
+    "name": "string",
+    "type": "text"
 }
 ```
 
@@ -409,33 +432,35 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Query параметры:**
+
 - `channelId` (required) - ID канала
 - `page` (optional, default: 1) - Номер страницы
 - `limit` (optional, default: 50) - Количество сообщений на странице
 
 **Ответ (200):**
+
 ```json
 {
-  "messages": [
-    {
-      "id": 1,
-      "content": "string",
-      "userId": 1,
-      "channelId": 1,
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z",
-      "user": {
-        "id": 1,
-        "username": "string",
-        "avatar": "string"
-      },
-      "isEdited": false
-    }
-  ],
-  "total": 100,
-  "page": 1,
-  "limit": 50,
-  "totalPages": 2
+    "messages": [
+        {
+            "id": 1,
+            "content": "string",
+            "userId": 1,
+            "channelId": 1,
+            "createdAt": "2024-01-01T00:00:00.000Z",
+            "updatedAt": "2024-01-01T00:00:00.000Z",
+            "user": {
+                "id": 1,
+                "username": "string",
+                "avatar": "string"
+            },
+            "isEdited": false
+        }
+    ],
+    "total": 100,
+    "page": 1,
+    "limit": 50,
+    "totalPages": 2
 }
 ```
 
@@ -448,27 +473,29 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Тело запроса:**
+
 ```json
 {
-  "content": "string",
-  "channelId": 1
+    "content": "string",
+    "channelId": 1
 }
 ```
 
 **Ответ (201):**
+
 ```json
 {
-  "id": 1,
-  "content": "string",
-  "userId": 1,
-  "channelId": 1,
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "user": {
     "id": 1,
-    "username": "string",
-    "avatar": "string"
-  },
-  "isEdited": false
+    "content": "string",
+    "userId": 1,
+    "channelId": 1,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "user": {
+        "id": 1,
+        "username": "string",
+        "avatar": "string"
+    },
+    "isEdited": false
 }
 ```
 
@@ -481,18 +508,20 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация (только автор или модератор)
 
 **Тело запроса:**
+
 ```json
 {
-  "content": "string"
+    "content": "string"
 }
 ```
 
 **Ответ (200):**
+
 ```json
 {
-  "id": 1,
-  "content": "string",
-  "isEdited": true
+    "id": 1,
+    "content": "string",
+    "isEdited": true
 }
 ```
 
@@ -515,19 +544,21 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Query параметры:**
+
 - `query` (required) - Поисковый запрос
 - `channelId` (required) - ID канала
 - `page` (optional, default: 1)
 - `limit` (optional, default: 50)
 
 **Ответ (200):**
+
 ```json
 {
-  "messages": [],
-  "total": 0,
-  "page": 1,
-  "limit": 50,
-  "totalPages": 0
+    "messages": [],
+    "total": 0,
+    "page": 1,
+    "limit": 50,
+    "totalPages": 0
 }
 ```
 
@@ -542,19 +573,20 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 [
-  {
-    "id": 1,
-    "userId": 1,
-    "serverId": 1,
-    "role": "member",
-    "user": {
-      "id": 1,
-      "username": "string",
-      "profilePicture": "string"
+    {
+        "id": 1,
+        "userId": 1,
+        "serverId": 1,
+        "role": "member",
+        "user": {
+            "id": 1,
+            "username": "string",
+            "profilePicture": "string"
+        }
     }
-  }
 ]
 ```
 
@@ -567,10 +599,11 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права модератора
 
 **Тело запроса:**
+
 ```json
 {
-  "userId": 1,
-  "role": "member"
+    "userId": 1,
+    "role": "member"
 }
 ```
 
@@ -585,9 +618,10 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права администратора
 
 **Тело запроса:**
+
 ```json
 {
-  "role": "moderator"
+    "role": "moderator"
 }
 ```
 
@@ -610,9 +644,10 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права владельца
 
 **Тело запроса:**
+
 ```json
 {
-  "userId": 1
+    "userId": 1
 }
 ```
 
@@ -627,25 +662,27 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права модератора
 
 **Тело запроса:**
+
 ```json
 {
-  "expiresAt": "2024-12-31T23:59:59.000Z",
-  "maxUses": 10
+    "expiresAt": "2024-12-31T23:59:59.000Z",
+    "maxUses": 10
 }
 ```
 
 **Ответ (201):**
+
 ```json
 {
-  "invite": {
-    "id": 1,
-    "token": "uuid-token",
-    "serverId": 1,
-    "createdBy": 1,
-    "maxUses": 10,
-    "uses": 0,
-    "expiresAt": "2024-12-31T23:59:59.000Z"
-  }
+    "invite": {
+        "id": 1,
+        "token": "uuid-token",
+        "serverId": 1,
+        "createdBy": 1,
+        "maxUses": 10,
+        "uses": 0,
+        "expiresAt": "2024-12-31T23:59:59.000Z"
+    }
 }
 ```
 
@@ -656,22 +693,23 @@ Authorization: Bearer <your_jwt_token>
 Получение информации о приглашении (публичный эндпоинт).
 
 **Ответ (200):**
+
 ```json
 {
-  "invite": {
-    "id": 1,
-    "token": "uuid-token",
-    "serverId": 1,
-    "maxUses": 10,
-    "uses": 0,
-    "expiresAt": "2024-12-31T23:59:59.000Z"
-  },
-  "server": {
-    "id": 1,
-    "name": "string",
-    "description": "string",
-    "icon": "string"
-  }
+    "invite": {
+        "id": 1,
+        "token": "uuid-token",
+        "serverId": 1,
+        "maxUses": 10,
+        "uses": 0,
+        "expiresAt": "2024-12-31T23:59:59.000Z"
+    },
+    "server": {
+        "id": 1,
+        "name": "string",
+        "description": "string",
+        "icon": "string"
+    }
 }
 ```
 
@@ -684,9 +722,10 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация
 
 **Ответ (200):**
+
 ```json
 {
-  "message": "User added to server"
+    "message": "User added to server"
 }
 ```
 
@@ -699,17 +738,18 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права модератора
 
 **Ответ (200):**
+
 ```json
 [
-  {
-    "id": 1,
-    "token": "uuid-token",
-    "serverId": 1,
-    "createdBy": 1,
-    "maxUses": 10,
-    "uses": 0,
-    "expiresAt": "2024-12-31T23:59:59.000Z"
-  }
+    {
+        "id": 1,
+        "token": "uuid-token",
+        "serverId": 1,
+        "createdBy": 1,
+        "maxUses": 10,
+        "uses": 0,
+        "expiresAt": "2024-12-31T23:59:59.000Z"
+    }
 ]
 ```
 
@@ -736,33 +776,34 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права администратора
 
 **Ответ (200):**
+
 ```json
 {
-  "users": {
-    "total": 100,
-    "active": 95,
-    "blocked": 5,
-    "byRole": {
-      "admin": 2,
-      "moderator": 5,
-      "user": 93
+    "users": {
+        "total": 100,
+        "active": 95,
+        "blocked": 5,
+        "byRole": {
+            "admin": 2,
+            "moderator": 5,
+            "user": 93
+        }
+    },
+    "servers": {
+        "total": 50,
+        "active": 48,
+        "blocked": 2,
+        "withChannels": 45
+    },
+    "channels": {
+        "total": 200,
+        "text": 150,
+        "voice": 50
+    },
+    "messages": {
+        "total": 10000,
+        "today": 500
     }
-  },
-  "servers": {
-    "total": 50,
-    "active": 48,
-    "blocked": 2,
-    "withChannels": 45
-  },
-  "channels": {
-    "total": 200,
-    "text": 150,
-    "voice": 50
-  },
-  "messages": {
-    "total": 10000,
-    "today": 500
-  }
 }
 ```
 
@@ -775,6 +816,7 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права модератора
 
 **Query параметры:**
+
 - `page` (optional, default: 1)
 - `limit` (optional, default: 20)
 - `search` (optional) - Поиск по username или email
@@ -798,10 +840,11 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права администратора
 
 **Тело запроса:**
+
 ```json
 {
-  "role": "moderator",
-  "isActive": true
+    "role": "moderator",
+    "isActive": true
 }
 ```
 
@@ -822,6 +865,7 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права модератора
 
 **Query параметры:**
+
 - `page` (optional, default: 1)
 - `limit` (optional, default: 20)
 - `search` (optional) - Поиск по имени
@@ -844,9 +888,10 @@ Authorization: Bearer <your_jwt_token>
 **Требуется:** Аутентификация, права администратора
 
 **Тело запроса:**
+
 ```json
 {
-  "reason": "string (минимум 3 символа)"
+    "reason": "string (минимум 3 символа)"
 }
 ```
 
@@ -894,29 +939,29 @@ Authorization: Bearer <your_jwt_token>
 ```javascript
 // Регистрация
 const registerResponse = await fetch('http://localhost:5001/api/auth/register', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    username: 'testuser',
-    email: 'test@example.com',
-    password: 'password123'
-  })
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123',
+    }),
 });
 
 const { token } = await registerResponse.json();
 
 // Вход
 const loginResponse = await fetch('http://localhost:5001/api/auth/login', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    email: 'test@example.com',
-    password: 'password123'
-  })
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        email: 'test@example.com',
+        password: 'password123',
+    }),
 });
 
 const { token: loginToken, user } = await loginResponse.json();
@@ -927,31 +972,31 @@ const { token: loginToken, user } = await loginResponse.json();
 ```javascript
 // Создание сервера
 const serverResponse = await fetch('http://localhost:5001/api/servers', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    name: 'My Server',
-    description: 'Server description',
-    icon: 'https://example.com/icon.png'
-  })
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+        name: 'My Server',
+        description: 'Server description',
+        icon: 'https://example.com/icon.png',
+    }),
 });
 
 const server = await serverResponse.json();
 
 // Создание канала
 const channelResponse = await fetch(`http://localhost:5001/api/servers/${server.id}/channels`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    name: 'general',
-    type: 'text'
-  })
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+        name: 'general',
+        type: 'text',
+    }),
 });
 
 const channel = await channelResponse.json();
@@ -961,15 +1006,15 @@ const channel = await channelResponse.json();
 
 ```javascript
 const messageResponse = await fetch('http://localhost:5001/api/messages', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    content: 'Hello, world!',
-    channelId: channel.id
-  })
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+        content: 'Hello, world!',
+        channelId: channel.id,
+    }),
 });
 
 const message = await messageResponse.json();
@@ -979,12 +1024,12 @@ const message = await messageResponse.json();
 
 ```javascript
 const messagesResponse = await fetch(
-  `http://localhost:5001/api/messages?channelId=${channel.id}&page=1&limit=50`,
-  {
-    headers: {
-      'Authorization': `Bearer ${token}`
+    `http://localhost:5001/api/messages?channelId=${channel.id}&page=1&limit=50`,
+    {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
     }
-  }
 );
 
 const { messages, total, page, totalPages } = await messagesResponse.json();
@@ -1011,5 +1056,3 @@ npm run docs-gen
 - Пароли должны быть минимум 8 символов (рекомендуется)
 - JWT токены действительны в течение 7 дней
 - Для работы с WebRTC используйте Socket.IO подключение по пути `/socket`
-
-

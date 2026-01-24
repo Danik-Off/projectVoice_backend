@@ -5,6 +5,7 @@
 ## Обзор
 
 CI/CD pipeline включает в себя:
+
 - Автоматическое тестирование и линтинг
 - Сборку приложения
 - Деплой на staging и production серверы
@@ -36,11 +37,13 @@ jest.config.js           # Конфигурация Jest
 Для работы CI/CD необходимо настроить следующие secrets в GitHub:
 
 ### Staging Environment
+
 - `STAGING_HOST` - IP адрес staging сервера
 - `STAGING_USER` - пользователь для SSH подключения
 - `STAGING_KEY` - приватный SSH ключ
 
 ### Production Environment
+
 - `PROD_HOST` - IP адрес production сервера
 - `PROD_USER` - пользователь для SSH подключения
 - `PROD_KEY` - приватный SSH ключ
@@ -126,16 +129,19 @@ CORS_ORIGIN=https://yourdomain.com
 ## Workflow Triggers
 
 ### Автоматические триггеры:
+
 - **Push в main** → полный CI/CD pipeline + деплой в production
 - **Push в develop** → полный CI/CD pipeline + деплой в staging
 - **Pull Request** → только тестирование и линтинг
 
 ### Ручные триггеры:
+
 - Можно запустить любой job вручную через GitHub Actions UI
 
 ## Мониторинг и логи
 
 ### Просмотр логов приложения:
+
 ```bash
 # Production
 sudo journalctl -u projectvoice -f
@@ -145,6 +151,7 @@ sudo journalctl -u projectvoice-staging -f
 ```
 
 ### Проверка статуса сервисов:
+
 ```bash
 # Production
 sudo systemctl status projectvoice
@@ -154,6 +161,7 @@ sudo systemctl status projectvoice-staging
 ```
 
 ### Мониторинг здоровья:
+
 ```bash
 # Проверка API
 curl http://localhost:5001/api-docs  # production
@@ -180,16 +188,19 @@ sudo systemctl start projectvoice
 ## Безопасность
 
 ### SSH ключи:
+
 - Используйте отдельные SSH ключи для каждого окружения
 - Регулярно ротируйте ключи
 - Ограничьте доступ по IP адресам
 
 ### База данных:
+
 - Используйте сильные пароли
 - Ограничьте права пользователей
 - Настройте SSL для production
 
 ### Приложение:
+
 - Используйте сильные JWT секреты
 - Настройте HTTPS в production
 - Регулярно обновляйте зависимости
@@ -199,19 +210,19 @@ sudo systemctl start projectvoice
 ### Частые проблемы:
 
 1. **Ошибка подключения к базе данных**
-   - Проверьте статус MySQL: `sudo systemctl status mysql`
-   - Проверьте логи: `sudo journalctl -u mysql -f`
+    - Проверьте статус MySQL: `sudo systemctl status mysql`
+    - Проверьте логи: `sudo journalctl -u mysql -f`
 
 2. **Ошибка порта**
-   - Проверьте занятые порты: `sudo netstat -tlnp | grep :5001`
-   - Измените порт в .env файле
+    - Проверьте занятые порты: `sudo netstat -tlnp | grep :5001`
+    - Измените порт в .env файле
 
 3. **Ошибка прав доступа**
-   - Проверьте владельца файлов: `sudo chown -R www-data:www-data /opt/projectvoice`
+    - Проверьте владельца файлов: `sudo chown -R www-data:www-data /opt/projectvoice`
 
 4. **Ошибка миграций**
-   - Проверьте подключение к БД
-   - Запустите миграции вручную: `sudo npm run db:migrate`
+    - Проверьте подключение к БД
+    - Запустите миграции вручную: `sudo npm run db:migrate`
 
 ### Полезные команды:
 
@@ -245,5 +256,3 @@ free -h
 ## Контакты
 
 При возникновении проблем с CI/CD обращайтесь к команде разработки.
-
-

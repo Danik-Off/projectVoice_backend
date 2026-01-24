@@ -1,14 +1,15 @@
 // rooms.js
 const rooms = {}; // { roomId: [{ token: string, micToggle: boolean, socketId: string, userData: object }] }
-const { User } = require('../../models');
 const jwt = require('jsonwebtoken');
+
+const { User } = require('../../models');
 
 // Получить данные пользователя из токена
 const getUserDataFromToken = async (token) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findByPk(decoded.userId, {
-            attributes: ['id', 'username', 'profilePicture', 'role']
+            attributes: ['id', 'username', 'profilePicture', 'role'],
         });
         return user;
     } catch (error) {
@@ -30,7 +31,7 @@ const addUserToRoom = async (roomId, user) => {
         const userData = await getUserDataFromToken(user.token);
         const userWithData = {
             ...user,
-            userData: userData || { username: 'Unknown User' }
+            userData: userData || { username: 'Unknown User' },
         };
         rooms[roomId].push(userWithData);
     }
@@ -54,12 +55,10 @@ const getRoomParticipants = (roomId) => {
 
 // Получить пользователя по токену
 const getUserByToken = async (token) => {
-    for (const roomId in rooms) {
-        if (rooms.hasOwnProperty(roomId)) {
-            const participant = rooms[roomId].find((user) => user.token === token);
-            if (participant) {
-                return { roomId, ...participant };
-            }
+    for (const roomId of Object.keys(rooms)) {
+        const participant = rooms[roomId].find((user) => user.token === token);
+        if (participant) {
+            return { roomId, ...participant };
         }
     }
     return null;
@@ -67,12 +66,10 @@ const getUserByToken = async (token) => {
 
 // Получить пользователя по socketId
 const getUserBySocketId = (socketId) => {
-    for (const roomId in rooms) {
-        if (rooms.hasOwnProperty(roomId)) {
-            const user = rooms[roomId].find((user) => user.socketId === socketId);
-            if (user) {
-                return { roomId, ...user };
-            }
+    for (const roomId of Object.keys(rooms)) {
+        const user = rooms[roomId].find((user) => user.socketId === socketId);
+        if (user) {
+            return { roomId, ...user };
         }
     }
     return null;

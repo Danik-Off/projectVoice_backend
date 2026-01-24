@@ -2,21 +2,20 @@ const {
     addUserToRoom,
     removeUserFromRoom,
     getRoomParticipants,
-    getUserByToken,
     getUserBySocketId,
 } = require('./rooms');
 
 module.exports = (io) => {
     console.log('🔌 Инициализация Socket.IO для WebRTC...');
-    
+
     io.on('connection', (socket) => {
         console.log('✅ Новое подключение Socket.IO:', socket.id);
-        
+
         // Обработка подключения к комнате
         socket.on('join-room', async (roomId, token) => {
             try {
                 console.log(`👤 Пользователь ${socket.id} присоединяется к комнате ${roomId}`);
-                
+
                 if (!roomId) {
                     socket.emit('error', { message: 'Room ID is required' });
                     return;
@@ -29,19 +28,21 @@ module.exports = (io) => {
                 const participants = getRoomParticipants(roomId).map((user) => ({
                     micToggle: user.micToggle,
                     socketId: user.socketId,
-                    userData: user.userData
+                    userData: user.userData,
                 }));
 
                 socket.emit('created', { roomId, participants });
 
                 // Сообщаем всем остальным в комнате, что новый пользователь присоединился
                 const currentUser = getUserBySocketId(socket.id);
-                socket.to(roomId).emit('user-connected', { 
+                socket.to(roomId).emit('user-connected', {
                     socketId: socket.id,
-                    userData: currentUser?.userData || { username: 'Unknown User' }
+                    userData: currentUser?.userData || { username: 'Unknown User' },
                 });
 
-                console.log(`✅ Пользователь ${socket.id} успешно присоединился к комнате ${roomId}`);
+                console.log(
+                    `✅ Пользователь ${socket.id} успешно присоединился к комнате ${roomId}`
+                );
             } catch (error) {
                 console.error('❌ Ошибка при присоединении к комнате:', error);
                 socket.emit('error', { message: 'Failed to join room' });

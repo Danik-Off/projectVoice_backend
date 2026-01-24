@@ -1,23 +1,15 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const path = require('path');
 const fs = require('fs');
-const cors = require('cors');
 const http = require('http');
+const path = require('path');
+
+const cors = require('cors');
+const dotenv = require('dotenv');
+const express = require('express');
 const { Server } = require('socket.io');
-// Подключение логики WebRTC
-const webrtc = require('./modules/webrtc/webrtc');
-
-// Исправление для сериализации BigInt в JSON
-BigInt.prototype.toJSON = function() {
-    return this.toString();
-};
-
-// Импорт маршрутов
-const apiRoutes = require('./routes/index');
-
-// Документация Swagger
 const swaggerUi = require('swagger-ui-express');
+
+const webrtc = require('./modules/webrtc/webrtc');
+const apiRoutes = require('./routes/index');
 const swaggerSpec = require('./utils/swagger/swagger-output.json');
 
 // Загрузка переменных окружения (из backend/.env)
@@ -32,8 +24,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
     path: WEBSOCKET_PATH,
     cors: {
-        origin: process.env.CORS_ORIGIN 
-            ? process.env.CORS_ORIGIN.split(',') 
+        origin: process.env.CORS_ORIGIN
+            ? process.env.CORS_ORIGIN.split(',')
             : ['http://localhost:3000', 'http://localhost:3001', '*'],
         methods: ['GET', 'POST'],
         credentials: true,
@@ -47,14 +39,14 @@ app.use(express.json());
 // Настройка CORS
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN 
-            ? process.env.CORS_ORIGIN.split(',') 
+        origin: process.env.CORS_ORIGIN
+            ? process.env.CORS_ORIGIN.split(',')
             : ['http://localhost:3000', 'http://localhost:3001'],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
         credentials: true,
         preflightContinue: false,
-        optionsSuccessStatus: 204
+        optionsSuccessStatus: 204,
     })
 );
 
@@ -64,7 +56,7 @@ if (process.env.LOG_REQUESTS !== 'false') {
     app.use((req, res, next) => {
         // Пропускаем логирование для WebSocket и опционально для частых запросов
         const skipLogging = req.path.startsWith('/socket');
-        
+
         if (!skipLogging) {
             const timestamp = new Date().toLocaleTimeString('ru-RU');
             console.log(`[${timestamp}] ${req.method} ${req.url}`);
@@ -83,8 +75,8 @@ app.get('/api/test', (req, res) => {
         version: '1.0.0',
         websocket: {
             path: WEBSOCKET_PATH,
-            url: `ws://localhost:${process.env.PORT || 5001}${WEBSOCKET_PATH}`
-        }
+            url: `ws://localhost:${process.env.PORT || 5001}${WEBSOCKET_PATH}`,
+        },
     });
 });
 
@@ -105,14 +97,16 @@ const frontendIndexPath = path.join(frontendBuildPath, 'index.html');
 if (fs.existsSync(frontendBuildPath) && fs.existsSync(frontendIndexPath)) {
     // Раздача статических файлов фронтенда
     app.use(express.static(frontendBuildPath));
-    
+
     // Обработка всех GET маршрутов для фронтенда (только для SPA)
     // ВАЖНО: этот роутер должен быть последним, чтобы не перехватывать Socket.IO
     app.get('*', (req, res, next) => {
         // Пропускаем Socket.IO, API маршруты и документацию
-        if (req.path.startsWith('/socket') || 
-            req.path.startsWith('/api') || 
-            req.path.startsWith('/api-docs')) {
+        if (
+            req.path.startsWith('/socket') ||
+            req.path.startsWith('/api') ||
+            req.path.startsWith('/api-docs')
+        ) {
             return next(); // Передаем управление дальше
         }
         res.sendFile(frontendIndexPath);
@@ -123,15 +117,17 @@ if (fs.existsSync(frontendBuildPath) && fs.existsSync(frontendIndexPath)) {
     // ВАЖНО: этот роутер должен быть последним
     app.get('*', (req, res) => {
         // Пропускаем Socket.IO, API маршруты и документацию
-        if (req.path.startsWith('/socket') || 
-            req.path.startsWith('/api') || 
-            req.path.startsWith('/api-docs')) {
+        if (
+            req.path.startsWith('/socket') ||
+            req.path.startsWith('/api') ||
+            req.path.startsWith('/api-docs')
+        ) {
             return res.status(404).json({ error: 'Endpoint not found' });
         }
-        res.status(404).json({ 
-            error: 'Frontend not found', 
+        res.status(404).json({
+            error: 'Frontend not found',
             message: 'Фронтенд не собран. Используйте API эндпоинты или соберите фронтенд.',
-            apiDocs: `http://localhost:${PORT}/api-docs`
+            apiDocs: `http://localhost:${PORT}/api-docs`,
         });
     });
     console.log('ℹ️  Фронтенд не найден: работаем только в режиме API');
@@ -145,4 +141,3 @@ server.listen(PORT, () => {
     console.log(`🔌 WebSocket путь: ${WEBSOCKET_PATH}`);
     console.log(`🔌 WebSocket URL: ws://localhost:${PORT}${WEBSOCKET_PATH}`);
 });
-

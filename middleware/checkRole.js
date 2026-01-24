@@ -1,22 +1,27 @@
-const { User, ServerMember, Role, MemberRole } = require('../models');
-const { Permissions, hasPermission, ALL_PERMISSIONS } = require('../utils/permissions');
+const { User, ServerMember, Role, Server } = require('../models');
+const { hasPermission, ALL_PERMISSIONS } = require('../utils/permissions');
 
 // Middleware для проверки роли пользователя (глобальной)
 const checkRole = (requiredRoles) => {
     return async (req, res, next) => {
-// ... (rest of the checkRole function remains same, just updating imports)
+        // ... (rest of the checkRole function remains same, just updating imports)
         try {
             console.log('🔍 Проверка роли для пользователя:', req.user.userId);
             console.log('🔍 Требуемые роли:', requiredRoles);
-            
+
             const user = await User.findByPk(req.user.userId);
-            
+
             if (!user) {
                 console.log('❌ Пользователь не найден');
                 return res.status(404).json({ error: 'Пользователь не найден' });
             }
 
-            console.log('👤 Найден пользователь:', { id: user.id, username: user.username, role: user.role, isActive: user.isActive });
+            console.log('👤 Найден пользователь:', {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                isActive: user.isActive,
+            });
 
             if (!user.isActive) {
                 console.log('❌ Аккаунт заблокирован');
@@ -24,7 +29,12 @@ const checkRole = (requiredRoles) => {
             }
 
             if (!requiredRoles.includes(user.role)) {
-                console.log('❌ Недостаточно прав. Роль пользователя:', user.role, 'Требуемые роли:', requiredRoles);
+                console.log(
+                    '❌ Недостаточно прав. Роль пользователя:',
+                    user.role,
+                    'Требуемые роли:',
+                    requiredRoles
+                );
                 return res.status(403).json({ error: 'Недостаточно прав' });
             }
 
@@ -51,15 +61,15 @@ const requirePermission = (permission) => {
             const member = await ServerMember.findOne({
                 where: {
                     serverId,
-                    userId: req.user.userId
+                    userId: req.user.userId,
                 },
                 include: [
                     {
                         model: Role,
                         as: 'roles',
-                        through: { attributes: [] }
-                    }
-                ]
+                        through: { attributes: [] },
+                    },
+                ],
             });
 
             if (!member) {
@@ -70,15 +80,15 @@ const requirePermission = (permission) => {
             const everyoneRole = await Role.findOne({
                 where: {
                     serverId,
-                    name: '@everyone'
-                }
+                    name: '@everyone',
+                },
             });
 
             // Находим позицию самой высокой роли участника
             let maxPosition = 0;
             if (everyoneRole) maxPosition = everyoneRole.position;
             if (member.roles && member.roles.length > 0) {
-                const positions = member.roles.map(r => r.position);
+                const positions = member.roles.map((r) => r.position);
                 maxPosition = Math.max(maxPosition, ...positions);
             }
 
@@ -99,7 +109,7 @@ const requirePermission = (permission) => {
             }
 
             if (member.roles && member.roles.length > 0) {
-                member.roles.forEach(role => {
+                member.roles.forEach((role) => {
                     userPermissions |= BigInt(role.permissions);
                 });
             }
@@ -126,15 +136,13 @@ const isAdmin = checkRole(['admin']);
 // Middleware для проверки владельца сервера
 const isServerOwner = async (req, res, next) => {
     try {
-        const { ServerMember, Server } = require('../models');
-        
         // Проверяем, является ли пользователь владельцем сервера по роли в ServerMembers
         const member = await ServerMember.findOne({
             where: {
                 serverId: req.params.serverId,
                 userId: req.user.userId,
-                role: 'owner'
-            }
+                role: 'owner',
+            },
         });
 
         // Проверяем, является ли пользователь владельцем сервера по полю ownerId
@@ -142,7 +150,9 @@ const isServerOwner = async (req, res, next) => {
         const isOwnerByField = server && server.ownerId === req.user.userId;
 
         if (!member && !isOwnerByField) {
-            return res.status(403).json({ error: 'Только владелец сервера может выполнить это действие' });
+            return res
+                .status(403)
+                .json({ error: 'Только владелец сервера может выполнить это действие' });
         }
 
         next();
@@ -157,5 +167,5 @@ module.exports = {
     requirePermission,
     isModerator,
     isAdmin,
-    isServerOwner
+    isServerOwner,
 };

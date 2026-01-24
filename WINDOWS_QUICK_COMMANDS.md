@@ -70,4 +70,3 @@ npm install
 ---
 
 📖 **Полная инструкция**: [QUICK_START_WINDOWS.md](QUICK_START_WINDOWS.md)
-

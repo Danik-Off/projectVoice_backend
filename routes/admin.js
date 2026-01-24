@@ -1,8 +1,9 @@
 const express = require('express');
-const { User, Server, Channel, Message, ServerMember } = require('../models');
+const { Op } = require('sequelize');
+
 const { authenticateToken } = require('../middleware/auth');
 const { isAdmin, isModerator } = require('../middleware/checkRole');
-const { Op, Sequelize } = require('sequelize');
+const { User, Server, Channel, Message, ServerMember } = require('../models');
 
 const router = express.Router();
 
@@ -70,26 +71,26 @@ router.get('/test', authenticateToken, isAdmin, async (req, res) => {
 router.get('/db-test', authenticateToken, isAdmin, async (req, res) => {
     try {
         console.log('Проверяем подключение к базе данных...');
-        
+
         // Проверяем доступность моделей
         console.log('User model:', typeof User);
         console.log('Server model:', typeof Server);
         console.log('Channel model:', typeof Channel);
         console.log('Message model:', typeof Message);
-        
+
         // Простой тест подключения
         const userCount = await User.count();
         console.log('User count:', userCount);
-        
-        res.json({ 
+
+        res.json({
             message: 'Подключение к базе данных работает',
             userCount: userCount,
             models: {
                 User: typeof User,
                 Server: typeof Server,
                 Channel: typeof Channel,
-                Message: typeof Message
-            }
+                Message: typeof Message,
+            },
         });
     } catch (error) {
         console.error('Ошибка теста базы данных:', error);
@@ -139,75 +140,77 @@ router.get('/db-test', authenticateToken, isAdmin, async (req, res) => {
 router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
     try {
         console.log('Начинаем получение статистики...');
-        
+
         // Получаем базовую статистику
         const totalUsers = await User.count();
         console.log('Total users:', totalUsers);
-        
+
         const activeUsers = await User.count({ where: { isActive: true } });
         console.log('Active users:', activeUsers);
-        
+
         const blockedUsers = await User.count({ where: { isActive: false } });
         console.log('Blocked users:', blockedUsers);
-        
+
         // Статистика по ролям
         const roleStats = {
             admin: 0,
             moderator: 0,
-            user: 0
+            user: 0,
         };
-        
+
         // Получаем количество пользователей по ролям
         const adminCount = await User.count({ where: { role: 'admin' } });
         const moderatorCount = await User.count({ where: { role: 'moderator' } });
         const userCount = await User.count({ where: { role: 'user' } });
-        
+
         roleStats.admin = adminCount;
         roleStats.moderator = moderatorCount;
         roleStats.user = userCount;
-        
+
         console.log('Role stats:', roleStats);
 
         const totalServers = await Server.count();
         console.log('Total servers:', totalServers);
-        
+
         const activeServers = await Server.count({ where: { isBlocked: false } });
         console.log('Active servers:', activeServers);
-        
+
         const blockedServers = await Server.count({ where: { isBlocked: true } });
         console.log('Blocked servers:', blockedServers);
-        
+
         // Серверы с каналами
         const serversWithChannels = await Server.count({
-            include: [{
-                model: Channel,
-                as: 'channels',
-                required: true
-            }]
+            include: [
+                {
+                    model: Channel,
+                    as: 'channels',
+                    required: true,
+                },
+            ],
         });
         console.log('Servers with channels:', serversWithChannels);
 
         const totalChannels = await Channel.count();
         console.log('Total channels:', totalChannels);
-        
+
         const textChannels = await Channel.count({ where: { type: 'text' } });
         console.log('Text channels:', textChannels);
-        
+
         const voiceChannels = await Channel.count({ where: { type: 'voice' } });
         console.log('Voice channels:', voiceChannels);
 
         const totalMessages = await Message.count();
         console.log('Total messages:', totalMessages);
-        
+
         // Сообщения за сегодня
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const messagesToday = await Message.count({
             where: {
                 createdAt: {
-                    [Op.gte]: today
-                }
-            }
+                    [Op.gte]: today,
+                },
+            },
         });
         console.log('Messages today:', messagesToday);
 
@@ -216,23 +219,23 @@ router.get('/stats', authenticateToken, isAdmin, async (req, res) => {
                 total: totalUsers,
                 active: activeUsers,
                 blocked: blockedUsers,
-                byRole: roleStats
+                byRole: roleStats,
             },
             servers: {
                 total: totalServers,
                 active: activeServers,
                 blocked: blockedServers,
-                withChannels: serversWithChannels
+                withChannels: serversWithChannels,
             },
             channels: {
                 total: totalChannels,
                 text: textChannels,
-                voice: voiceChannels
+                voice: voiceChannels,
             },
             messages: {
                 total: totalMessages,
-                today: messagesToday
-            }
+                today: messagesToday,
+            },
         };
 
         console.log('Final stats:', stats);
@@ -326,11 +329,11 @@ router.get('/users', authenticateToken, isModerator, async (req, res) => {
         }
 
         const where = {};
-        
+
         if (search) {
             where[Op.or] = [
                 { username: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } }
+                { email: { [Op.like]: `%${search}%` } },
             ];
         }
 
@@ -354,13 +357,15 @@ router.get('/users', authenticateToken, isModerator, async (req, res) => {
                 {
                     model: ServerMember,
                     as: 'serverMembers',
-                    include: [{
-                        model: Server,
-                        as: 'server',
-                        attributes: ['id', 'name']
-                    }]
-                }
-            ]
+                    include: [
+                        {
+                            model: Server,
+                            as: 'server',
+                            attributes: ['id', 'name'],
+                        },
+                    ],
+                },
+            ],
         });
 
         res.json({
@@ -368,7 +373,7 @@ router.get('/users', authenticateToken, isModerator, async (req, res) => {
             total: users.count,
             page,
             limit,
-            totalPages: Math.ceil(users.count / limit)
+            totalPages: Math.ceil(users.count / limit),
         });
     } catch (error) {
         console.error('Ошибка получения пользователей:', error);
@@ -413,12 +418,14 @@ router.get('/users/:id', authenticateToken, isModerator, async (req, res) => {
                 {
                     model: ServerMember,
                     as: 'serverMembers',
-                    include: [{
-                        model: Server,
-                        as: 'server'
-                    }]
-                }
-            ]
+                    include: [
+                        {
+                            model: Server,
+                            as: 'server',
+                        },
+                    ],
+                },
+            ],
         });
 
         if (!user) {
@@ -511,12 +518,12 @@ router.put('/users/:id', authenticateToken, isAdmin, async (req, res) => {
 
         // Возвращаем обновленного пользователя без пароля
         const updatedUser = await User.findByPk(userId, {
-            attributes: { exclude: ['password'] }
+            attributes: { exclude: ['password'] },
         });
 
-        res.json({ 
-            message: 'Пользователь обновлен', 
-            user: updatedUser 
+        res.json({
+            message: 'Пользователь обновлен',
+            user: updatedUser,
         });
     } catch (error) {
         console.error('Ошибка обновления пользователя:', error);
@@ -655,7 +662,16 @@ router.get('/servers', authenticateToken, isModerator, async (req, res) => {
 
         const servers = await Server.findAndCountAll({
             where,
-            attributes: ['id', 'name', 'description', 'isBlocked', 'blockReason', 'blockedAt', 'createdAt', 'ownerId'],
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'isBlocked',
+                'blockReason',
+                'blockedAt',
+                'createdAt',
+                'ownerId',
+            ],
             order: [['createdAt', 'DESC']],
             limit,
             offset: (page - 1) * limit,
@@ -663,19 +679,19 @@ router.get('/servers', authenticateToken, isModerator, async (req, res) => {
                 {
                     model: User,
                     as: 'owner',
-                    attributes: ['id', 'username', 'email']
+                    attributes: ['id', 'username', 'email'],
                 },
                 {
                     model: User,
                     as: 'blockedByUser',
-                    attributes: ['id', 'username']
+                    attributes: ['id', 'username'],
                 },
                 {
                     model: Channel,
                     as: 'channels',
-                    attributes: ['id', 'name', 'type']
-                }
-            ]
+                    attributes: ['id', 'name', 'type'],
+                },
+            ],
         });
 
         res.json({
@@ -683,7 +699,7 @@ router.get('/servers', authenticateToken, isModerator, async (req, res) => {
             total: servers.count,
             page,
             limit,
-            totalPages: Math.ceil(servers.count / limit)
+            totalPages: Math.ceil(servers.count / limit),
         });
     } catch (error) {
         console.error('Ошибка получения серверов:', error);
@@ -706,28 +722,30 @@ router.get('/servers/:id', authenticateToken, isModerator, async (req, res) => {
                 {
                     model: Channel,
                     as: 'channels',
-                    attributes: ['id', 'name', 'type']
+                    attributes: ['id', 'name', 'type'],
                 },
                 {
                     model: User,
                     as: 'owner',
-                    attributes: ['id', 'username', 'email']
+                    attributes: ['id', 'username', 'email'],
                 },
                 {
                     model: User,
                     as: 'blockedByUser',
-                    attributes: ['id', 'username']
+                    attributes: ['id', 'username'],
                 },
                 {
                     model: ServerMember,
                     as: 'members',
                     attributes: ['id', 'role', 'joinedAt'],
-                    include: [{
-                        model: User,
-                        attributes: ['id', 'username', 'email']
-                    }]
-                }
-            ]
+                    include: [
+                        {
+                            model: User,
+                            attributes: ['id', 'username', 'email'],
+                        },
+                    ],
+                },
+            ],
         });
 
         if (!server) {
@@ -802,7 +820,9 @@ router.post('/servers/:id/block', authenticateToken, isAdmin, async (req, res) =
 
         // Валидация причины блокировки
         if (!reason || reason.trim().length < 3) {
-            return res.status(400).json({ error: 'Причина блокировки должна содержать минимум 3 символа' });
+            return res
+                .status(400)
+                .json({ error: 'Причина блокировки должна содержать минимум 3 символа' });
         }
 
         server.isBlocked = true;
@@ -818,19 +838,19 @@ router.post('/servers/:id/block', authenticateToken, isAdmin, async (req, res) =
                 {
                     model: User,
                     as: 'owner',
-                    attributes: ['id', 'username', 'email']
+                    attributes: ['id', 'username', 'email'],
                 },
                 {
                     model: User,
                     as: 'blockedByUser',
-                    attributes: ['id', 'username']
-                }
-            ]
+                    attributes: ['id', 'username'],
+                },
+            ],
         });
 
-        res.json({ 
-            message: 'Сервер заблокирован', 
-            server: updatedServer
+        res.json({
+            message: 'Сервер заблокирован',
+            server: updatedServer,
         });
     } catch (error) {
         console.error('Ошибка блокировки сервера:', error);
@@ -898,19 +918,19 @@ router.post('/servers/:id/unblock', authenticateToken, isAdmin, async (req, res)
                 {
                     model: User,
                     as: 'owner',
-                    attributes: ['id', 'username', 'email']
+                    attributes: ['id', 'username', 'email'],
                 },
                 {
                     model: User,
                     as: 'blockedByUser',
-                    attributes: ['id', 'username']
-                }
-            ]
+                    attributes: ['id', 'username'],
+                },
+            ],
         });
 
-        res.json({ 
-            message: 'Сервер разблокирован', 
-            server: updatedServer
+        res.json({
+            message: 'Сервер разблокирован',
+            server: updatedServer,
         });
     } catch (error) {
         console.error('Ошибка разблокировки сервера:', error);
@@ -967,7 +987,7 @@ router.get('/logs', authenticateToken, isAdmin, async (req, res) => {
         const logs = {
             system: 'Логи системы будут здесь',
             errors: 'Логи ошибок будут здесь',
-            access: 'Логи доступа будут здесь'
+            access: 'Логи доступа будут здесь',
         };
 
         res.json(logs);
@@ -977,4 +997,4 @@ router.get('/logs', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;
