@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: false, // Поле обязательно для связи с сервером
                 references: {
-                    model: 'Servers', // Связь с моделью Server
+                    model: 'servers', // Связь с моделью Server
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         {
             timestamps: true,
-            tableName: 'Channels', // Убедитесь, что имя таблицы соответствует миграции
+            tableName: 'channels', // Убедитесь, что имя таблицы соответствует миграции
         }
     );
 

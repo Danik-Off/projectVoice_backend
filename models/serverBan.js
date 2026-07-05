@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         {
             timestamps: true,
+            tableName: 'serverBans',
         }
     );
 

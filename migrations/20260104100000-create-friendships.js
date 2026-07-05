@@ -2,7 +2,7 @@
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Friendships', {
+        await queryInterface.createTable('friendships', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -12,7 +12,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Users',
+                    model: 'users',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -22,7 +22,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Users',
+                    model: 'users',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -44,12 +44,12 @@ module.exports = {
         });
 
         // Уникальный индекс, чтобы нельзя было создать дубликат дружбы в одном направлении
-        await queryInterface.addIndex('Friendships', ['userId', 'friendId'], {
+        await queryInterface.addIndex('friendships', ['userId', 'friendId'], {
             unique: true,
         });
     },
 
     async down(queryInterface) {
-        await queryInterface.dropTable('Friendships');
+        await queryInterface.dropTable('friendships');
     },
 };

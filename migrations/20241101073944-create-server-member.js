@@ -2,7 +2,7 @@
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('ServerMembers', {
+        await queryInterface.createTable('serverMembers', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -12,7 +12,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Users', // Название таблицы, с которой будет связь
+                    model: 'users', // Название таблицы, с которой будет связь
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -22,7 +22,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Servers', // Название таблицы, с которой будет связь
+                    model: 'servers', // Название таблицы, с которой будет связь
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -45,6 +45,6 @@ module.exports = {
     },
 
     async down(queryInterface) {
-        await queryInterface.dropTable('ServerMembers');
+        await queryInterface.dropTable('serverMembers');
     },
 };

@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Messages', {
+        await queryInterface.createTable('messages', {
             id: {
                 type: Sequelize.INTEGER,
                 autoIncrement: true,
@@ -20,7 +20,7 @@ module.exports = {
             userId: {
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'Users',
+                    model: 'users',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -29,7 +29,7 @@ module.exports = {
             channelId: {
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'Channels',
+                    model: 'channels',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -49,6 +49,6 @@ module.exports = {
     },
 
     async down(queryInterface) {
-        await queryInterface.dropTable('Messages');
+        await queryInterface.dropTable('messages');
     },
 };

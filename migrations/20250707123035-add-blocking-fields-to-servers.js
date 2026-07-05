@@ -3,27 +3,27 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.addColumn('Servers', 'isBlocked', {
+        await queryInterface.addColumn('servers', 'isBlocked', {
             type: Sequelize.BOOLEAN,
             allowNull: false,
             defaultValue: false,
         });
 
-        await queryInterface.addColumn('Servers', 'blockReason', {
+        await queryInterface.addColumn('servers', 'blockReason', {
             type: Sequelize.TEXT,
             allowNull: true,
         });
 
-        await queryInterface.addColumn('Servers', 'blockedAt', {
+        await queryInterface.addColumn('servers', 'blockedAt', {
             type: Sequelize.DATE,
             allowNull: true,
         });
 
-        await queryInterface.addColumn('Servers', 'blockedBy', {
+        await queryInterface.addColumn('servers', 'blockedBy', {
             type: Sequelize.INTEGER,
             allowNull: true,
             references: {
-                model: 'Users',
+                model: 'users',
                 key: 'id',
             },
             onUpdate: 'CASCADE',
@@ -32,9 +32,9 @@ module.exports = {
     },
 
     async down(queryInterface) {
-        await queryInterface.removeColumn('Servers', 'isBlocked');
-        await queryInterface.removeColumn('Servers', 'blockReason');
-        await queryInterface.removeColumn('Servers', 'blockedAt');
-        await queryInterface.removeColumn('Servers', 'blockedBy');
+        await queryInterface.removeColumn('servers', 'isBlocked');
+        await queryInterface.removeColumn('servers', 'blockReason');
+        await queryInterface.removeColumn('servers', 'blockedAt');
+        await queryInterface.removeColumn('servers', 'blockedBy');
     },
 };

@@ -2,7 +2,7 @@
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Roles', {
+        await queryInterface.createTable('roles', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -12,7 +12,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Servers',
+                    model: 'servers',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -57,7 +57,7 @@ module.exports = {
             },
         });
 
-        await queryInterface.createTable('MemberRoles', {
+        await queryInterface.createTable('memberRoles', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -67,7 +67,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'ServerMembers',
+                    model: 'serverMembers',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -77,7 +77,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Roles',
+                    model: 'roles',
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
@@ -94,13 +94,13 @@ module.exports = {
         });
 
         // Add index for performance
-        await queryInterface.addIndex('MemberRoles', ['memberId', 'roleId'], {
+        await queryInterface.addIndex('memberRoles', ['memberId', 'roleId'], {
             unique: true,
         });
     },
 
     async down(queryInterface) {
-        await queryInterface.dropTable('MemberRoles');
-        await queryInterface.dropTable('Roles');
+        await queryInterface.dropTable('memberRoles');
+        await queryInterface.dropTable('roles');
     },
 };

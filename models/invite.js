@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'Servers',
+                model: 'servers',
                 key: 'id',
             },
         },
@@ -27,7 +27,12 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             defaultValue: 0,
         },
-    });
+    },
+    {
+        tableName: 'invites',
+        timestamps: true,
+    }
+    );
 
     Invite.associate = (models) => {
         Invite.belongsTo(models.Server, {

@@ -46,13 +46,14 @@ module.exports = (sequelize, DataTypes) => {
         },
         {
             timestamps: true,
+            tableName: 'roles',
         }
     );
 
     Role.associate = (models) => {
         Role.belongsTo(models.Server, { foreignKey: 'serverId', as: 'server' });
         Role.belongsToMany(models.ServerMember, {
-            through: 'MemberRoles',
+            through: models.MemberRole,
             foreignKey: 'roleId',
             otherKey: 'memberId',
             as: 'members',

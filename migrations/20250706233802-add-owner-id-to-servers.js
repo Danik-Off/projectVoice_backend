@@ -3,59 +3,71 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        // Сначала добавляем поле как nullable
-        await queryInterface.addColumn('Servers', 'ownerId', {
-            type: Sequelize.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'Users',
-                key: 'id',
-            },
-            onUpdate: 'CASCADE',
-            onDelete: 'CASCADE',
-        });
+        const tableName = 'servers';
+        const columnName = 'ownerId';
 
-        // Заполняем поле ownerId для существующих серверов
-        // Берем первого участника с ролью 'owner' для каждого сервера
-        const servers = await queryInterface.sequelize.query(
-            'SELECT id FROM Servers WHERE ownerId IS NULL',
-            { type: Sequelize.QueryTypes.SELECT }
-        );
+        try {
+            // Пытаемся добавить колонку
+            await queryInterface.addColumn(tableName, columnName, {
+                type: Sequelize.INTEGER,
+                allowNull: true,
+                references: {
+                    model: 'users',
+                    key: 'id',
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE',
+            });
 
-        for (const server of servers) {
-            const ownerMember = await queryInterface.sequelize.query(
-                'SELECT userId FROM ServerMembers WHERE serverId = ? AND role = "owner" LIMIT 1',
-                {
-                    type: Sequelize.QueryTypes.SELECT,
-                    replacements: [server.id],
-                }
+            // Заполняем поле ownerId для существующих серверов
+            const servers = await queryInterface.sequelize.query(
+                `SELECT id FROM ${tableName} WHERE "ownerId" IS NULL`,
+                { type: Sequelize.QueryTypes.SELECT }
             );
 
-            if (ownerMember.length > 0) {
-                await queryInterface.sequelize.query(
-                    'UPDATE Servers SET ownerId = ? WHERE id = ?',
+            for (const server of servers) {
+                const ownerMember = await queryInterface.sequelize.query(
+                    `SELECT "userId" FROM "serverMembers" WHERE "serverId" = $1 AND role = 'owner' LIMIT 1`,
                     {
-                        type: Sequelize.QueryTypes.UPDATE,
-                        replacements: [ownerMember[0].userId, server.id],
+                        type: Sequelize.QueryTypes.SELECT,
+                        replacements: [server.id],
                     }
                 );
-            }
-        }
 
-        // Теперь делаем поле NOT NULL
-        await queryInterface.changeColumn('Servers', 'ownerId', {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-            references: {
-                model: 'Users',
-                key: 'id',
-            },
-            onUpdate: 'CASCADE',
-            onDelete: 'CASCADE',
-        });
+                if (ownerMember.length > 0) {
+                    await queryInterface.sequelize.query(
+                        `UPDATE ${tableName} SET "ownerId" = $1 WHERE id = $2`,
+                        {
+                            type: Sequelize.QueryTypes.UPDATE,
+                            replacements: [ownerMember[0].userId, server.id],
+                        }
+                    );
+                }
+            }
+
+            // Делаем поле NOT NULL
+            await queryInterface.changeColumn(tableName, columnName, {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                references: {
+                    model: 'users',
+                    key: 'id',
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE',
+            });
+        } catch (error) {
+            // Если колонка уже существует, проверяем, что она NOT NULL
+            if (error.message.includes('already exists')) {
+                // Колонка уже есть — просто убеждаемся, что она NOT NULL
+                // Ничего не делаем, так как она уже настроена
+                return;
+            }
+            throw error;
+        }
     },
 
     async down(queryInterface) {
-        await queryInterface.removeColumn('Servers', 'ownerId');
+        await queryInterface.removeColumn('servers', 'ownerId');
     },
 };

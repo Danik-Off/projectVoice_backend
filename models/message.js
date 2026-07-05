@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'Users', // Имя таблицы, с которой устанавливается связь
+                model: 'users', // Имя таблицы, с которой устанавливается связь
                 key: 'id',
             },
             onUpdate: 'CASCADE',
@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'Channels', // Имя таблицы, с которой устанавливается связь
+                model: 'channels', // Имя таблицы, с которой устанавливается связь
                 key: 'id',
             },
             onUpdate: 'CASCADE',
@@ -42,8 +42,10 @@ module.exports = (sequelize, DataTypes) => {
         updatedAt: {
             type: DataTypes.DATE,
             allowNull: false,
-            defaultValue: DataTypes.NOW, // Устанавливает текущее время по умолчанию
+            defaultValue: DataTypes.NOW,
         },
+    }, {
+        tableName: 'messages',
     });
 
     Message.associate = (models) => {
